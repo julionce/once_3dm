@@ -1,6 +1,6 @@
 use crate::deserializer::Deserializer;
 
-trait Deserialize<D>
+pub trait Deserialize<D>
 where
     Self: Sized,
     D: Deserializer,
