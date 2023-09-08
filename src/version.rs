@@ -1,6 +1,8 @@
 use std::fmt::Display;
 
-use crate::{deserialize::Deserialize, deserializer::Deserializer};
+use once_io::OStream;
+
+use crate::deserialize::Deserialize;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Version {
@@ -58,15 +60,15 @@ impl Into<u8> for Version {
     }
 }
 
-impl<D> Deserialize<D> for Version
+impl<T> Deserialize<T> for Version
 where
-    D: Deserializer,
+    T: OStream,
 {
     type Error = String;
 
-    fn deserialize(deserializer: &mut D) -> Result<Self, Self::Error> {
+    fn deserialize(ostream: &mut T) -> Result<Self, Self::Error> {
         let mut buf = [0; 8];
-        match deserializer.read_exact(&mut buf) {
+        match ostream.read_exact(&mut buf) {
             Ok(()) => {
                 match buf
                     .iter()

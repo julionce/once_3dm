@@ -1,26 +1,29 @@
-use crate::deserializer::Deserializer;
+use once_io::OStream;
 
-pub trait Deserialize<D>
+use std::mem;
+
+pub trait Deserialize<T>
 where
     Self: Sized,
-    D: Deserializer,
+    T: OStream,
 {
     type Error;
 
-    fn deserialize(_: &mut D) -> Result<Self, Self::Error>;
+    fn deserialize(ostream: &mut T) -> Result<Self, Self::Error>;
 }
 
 macro_rules! impl_deserialize_for_num {
-    ($type: ty, $method: ident) => {
-        impl<D> Deserialize<D> for $type
+    ($type: ty) => {
+        impl<T> Deserialize<T> for $type
         where
-            D: Deserializer,
+            T: OStream,
         {
             type Error = String;
 
-            fn deserialize(deserializer: &mut D) -> Result<Self, Self::Error> {
-                match deserializer.$method() {
-                    Ok(v) => Ok(v),
+            fn deserialize(ostream: &mut T) -> Result<Self, Self::Error> {
+                let mut buf = [0u8; mem::size_of::<$type>()];
+                match ostream.read_exact(&mut buf) {
+                    Ok(()) => Ok(<$type>::from_le_bytes(buf)),
                     Err(e) => Err(e.to_string()),
                 }
             }
@@ -28,26 +31,24 @@ macro_rules! impl_deserialize_for_num {
     };
 }
 
-impl_deserialize_for_num! {u8, read_u8}
-impl_deserialize_for_num! {u16, read_u16}
-impl_deserialize_for_num! {u32, read_u32}
-impl_deserialize_for_num! {u64, read_u64}
-impl_deserialize_for_num! {u128, read_u128}
-impl_deserialize_for_num! {i8, read_i8}
-impl_deserialize_for_num! {i16, read_i16}
-impl_deserialize_for_num! {i32, read_i32}
-impl_deserialize_for_num! {i64, read_i64}
-impl_deserialize_for_num! {i128, read_i128}
-impl_deserialize_for_num! {usize, read_usize}
-impl_deserialize_for_num! {isize, read_isize}
-impl_deserialize_for_num! {f32, read_f32}
-impl_deserialize_for_num! {f64, read_f64}
+impl_deserialize_for_num! {u8}
+impl_deserialize_for_num! {u16}
+impl_deserialize_for_num! {u32}
+impl_deserialize_for_num! {u64}
+impl_deserialize_for_num! {u128}
+impl_deserialize_for_num! {i8}
+impl_deserialize_for_num! {i16}
+impl_deserialize_for_num! {i32}
+impl_deserialize_for_num! {i64}
+impl_deserialize_for_num! {i128}
+impl_deserialize_for_num! {usize}
+impl_deserialize_for_num! {isize}
+impl_deserialize_for_num! {f32}
+impl_deserialize_for_num! {f64}
 
 #[cfg(test)]
 mod tests {
     use std::io::Cursor;
-
-    use crate::v1;
 
     use super::*;
 
@@ -56,7 +57,7 @@ mod tests {
             #[test]
             fn $test_name() {
                 let data = $value.to_le_bytes();
-                let mut reader = v1::reader::Reader::new(Cursor::new(data));
+                let mut reader = Cursor::new(data);
                 assert_eq!(<$type>::deserialize(&mut reader).unwrap(), $value);
             }
         };
