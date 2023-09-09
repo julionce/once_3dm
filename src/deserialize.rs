@@ -2,25 +2,26 @@ use once_io::OStream;
 
 use std::mem;
 
-pub trait Deserialize<T>
+pub trait Deserialize
 where
     Self: Sized,
-    T: OStream,
 {
     type Error;
 
-    fn deserialize(ostream: &mut T) -> Result<Self, Self::Error>;
+    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    where
+        T: OStream;
 }
 
 macro_rules! impl_deserialize_for_num {
     ($type: ty) => {
-        impl<T> Deserialize<T> for $type
-        where
-            T: OStream,
-        {
+        impl Deserialize for $type {
             type Error = String;
 
-            fn deserialize(ostream: &mut T) -> Result<Self, Self::Error> {
+            fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+            where
+                T: OStream,
+            {
                 let mut buf = [0u8; mem::size_of::<$type>()];
                 match ostream.read_exact(&mut buf) {
                     Ok(()) => Ok(<$type>::from_le_bytes(buf)),

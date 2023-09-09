@@ -60,13 +60,13 @@ impl Into<u8> for Version {
     }
 }
 
-impl<T> Deserialize<T> for Version
-where
-    T: OStream,
-{
+impl Deserialize for Version {
     type Error = String;
 
-    fn deserialize(ostream: &mut T) -> Result<Self, Self::Error> {
+    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    where
+        T: OStream,
+    {
         let mut buf = [0; 8];
         match ostream.read_exact(&mut buf) {
             Ok(()) => {
