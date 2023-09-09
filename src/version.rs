@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use once_io::OStream;
 
-use crate::deserialize::{Deserialize, FileVersion, V1};
+use crate::deserialize::{Deserialize, FileVersion};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Version {
@@ -96,7 +96,7 @@ where
 mod tests {
     use std::io::Cursor;
 
-    use crate::v1;
+    use crate::deserialize::V1;
 
     use super::*;
 
@@ -133,9 +133,9 @@ mod tests {
     #[test]
     fn deserialize_ok() {
         let data = "       1".as_bytes();
-        let mut deserializer = v1::reader::Reader::new(Cursor::new(data));
+        let mut ostream = Cursor::new(data);
         assert_eq!(
-            <Version as Deserialize<V1>>::deserialize(&mut deserializer).ok(),
+            <Version as Deserialize<V1>>::deserialize(&mut ostream).ok(),
             Some(Version::V1)
         );
     }
@@ -143,14 +143,14 @@ mod tests {
     #[test]
     fn deserialize_invalid_version() {
         let data = "        a".as_bytes();
-        let mut deserializer = v1::reader::Reader::new(Cursor::new(data));
-        assert!(<Version as Deserialize<V1>>::deserialize(&mut deserializer).is_err());
+        let mut ostream = Cursor::new(data);
+        assert!(<Version as Deserialize<V1>>::deserialize(&mut ostream).is_err());
     }
 
     #[test]
     fn deserialize_io_error() {
         let data = "    1".as_bytes();
-        let mut deserializer = v1::reader::Reader::new(Cursor::new(data));
-        assert!(<Version as Deserialize<V1>>::deserialize(&mut deserializer).is_err());
+        let mut ostream = Cursor::new(data);
+        assert!(<Version as Deserialize<V1>>::deserialize(&mut ostream).is_err());
     }
 }
