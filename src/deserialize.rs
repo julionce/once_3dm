@@ -2,9 +2,32 @@ use once_io::OStream;
 
 use std::mem;
 
-pub trait Deserialize
+pub enum V1 {}
+pub enum V2 {}
+pub enum V3 {}
+pub enum V4 {}
+pub enum V50 {}
+pub enum V60 {}
+pub enum V70 {}
+
+mod private {
+    pub trait Sealed {}
+    impl Sealed for super::V1 {}
+    impl Sealed for super::V2 {}
+    impl Sealed for super::V3 {}
+    impl Sealed for super::V4 {}
+    impl Sealed for super::V50 {}
+    impl Sealed for super::V60 {}
+    impl Sealed for super::V70 {}
+}
+
+pub trait FileVersion: private::Sealed {}
+impl<T> FileVersion for T where T: private::Sealed {}
+
+pub trait Deserialize<V>
 where
     Self: Sized,
+    V: FileVersion,
 {
     type Error;
 
@@ -15,7 +38,10 @@ where
 
 macro_rules! impl_deserialize_for_num {
     ($type: ty) => {
-        impl Deserialize for $type {
+        impl<V> Deserialize<V> for $type
+        where
+            V: FileVersion,
+        {
             type Error = String;
 
             fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
@@ -59,7 +85,10 @@ mod tests {
             fn $test_name() {
                 let data = $value.to_le_bytes();
                 let mut reader = Cursor::new(data);
-                assert_eq!(<$type>::deserialize(&mut reader).unwrap(), $value);
+                assert_eq!(
+                    <$type as Deserialize<V1>>::deserialize(&mut reader).unwrap(),
+                    $value
+                );
             }
         };
     }
