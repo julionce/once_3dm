@@ -1,4 +1,5 @@
 use once_io::OStream;
+use std::io::Read;
 
 use std::mem;
 
@@ -72,6 +73,107 @@ impl_deserialize_for_num! {usize}
 impl_deserialize_for_num! {isize}
 impl_deserialize_for_num! {f32}
 impl_deserialize_for_num! {f64}
+
+impl Deserialize<V1> for String {
+    type Error = String;
+
+    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    where
+        T: OStream,
+    {
+        let length = <u32 as Deserialize<V1>>::deserialize(ostream)?;
+        let mut string = String::new();
+        match ostream.take(length as u64).read_to_string(&mut string) {
+            Ok(size) => {
+                if size as u64 == length as u64 {
+                    Ok(string)
+                } else {
+                    Err("Invalid length".to_string())
+                }
+            }
+            Err(e) => Err(e.to_string()),
+        }
+    }
+}
+
+impl Deserialize<V2> for String {
+    type Error = String;
+
+    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    where
+        T: OStream,
+    {
+        let length = <u32 as Deserialize<V2>>::deserialize(ostream)?;
+        if 0 < length {
+            let mut buf: Vec<u16> = vec![];
+            for _ in 0..(length - 1) {
+                buf.push(<u16 as Deserialize<V2>>::deserialize(ostream)?);
+            }
+            <u16 as Deserialize<V2>>::deserialize(ostream)?;
+            match String::from_utf16(&buf) {
+                Ok(string) => Ok(string),
+                Err(e) => Err(e.to_string()),
+            }
+        } else {
+            Ok(String::new())
+        }
+    }
+}
+
+impl Deserialize<V3> for String {
+    type Error = String;
+
+    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    where
+        T: OStream,
+    {
+        <String as Deserialize<V2>>::deserialize(ostream)
+    }
+}
+
+impl Deserialize<V4> for String {
+    type Error = String;
+
+    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    where
+        T: OStream,
+    {
+        <String as Deserialize<V2>>::deserialize(ostream)
+    }
+}
+
+impl Deserialize<V50> for String {
+    type Error = String;
+
+    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    where
+        T: OStream,
+    {
+        <String as Deserialize<V2>>::deserialize(ostream)
+    }
+}
+
+impl Deserialize<V60> for String {
+    type Error = String;
+
+    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    where
+        T: OStream,
+    {
+        <String as Deserialize<V2>>::deserialize(ostream)
+    }
+}
+
+impl Deserialize<V70> for String {
+    type Error = String;
+
+    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    where
+        T: OStream,
+    {
+        <String as Deserialize<V2>>::deserialize(ostream)
+    }
+}
 
 #[cfg(test)]
 mod tests {
