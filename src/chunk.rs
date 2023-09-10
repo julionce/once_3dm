@@ -1,3 +1,7 @@
+use crate::deserialize::FileVersion;
+use once_3dm_macros::Deserialize;
+use once_io::OStream;
+
 use crate::{
     deserialize::{Deserialize, V1, V2, V3, V4, V50, V60, V70},
     typecode::{self, Typecode},
@@ -112,5 +116,26 @@ impl Deserialize<V70> for Begin {
         T: once_io::OStream,
     {
         <Begin as Deserialize<V50>>::deserialize(ostream)
+    }
+}
+
+#[derive(Deserialize)]
+pub struct ShortVersion {
+    pub major: i32,
+    pub minor: i32,
+}
+
+#[derive(Deserialize)]
+pub struct BigVersion {
+    inner: u8,
+}
+
+impl BigVersion {
+    pub fn major(&self) -> u8 {
+        self.inner >> 4
+    }
+
+    pub fn minor(&self) -> u8 {
+        self.inner & 0x0F
     }
 }
