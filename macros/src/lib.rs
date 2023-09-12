@@ -4,7 +4,7 @@ use quote::quote;
 use syn::{parse_macro_input, Data, DeriveInput, Fields};
 
 struct StructAttrs {
-    table: Option<TableAttr>,
+    table: TableAttr,
     chunk_version: ChunkVersion,
     from_chunk_version: Option<FromChunkVersion>,
 }
@@ -90,24 +90,16 @@ impl FromChunkVersion {
     }
 }
 
-struct TableAttr {
-    typecode: Option<syn::Type>,
-}
+struct TableAttr(bool);
 
 impl TableAttr {
-    fn parse(attrs: &Vec<syn::Attribute>) -> Option<Self> {
-        match attrs.iter().find(|attr| attr.path.is_ident("table")) {
-            Some(attr) => {
-                if attr.tokens.is_empty() {
-                    Some(TableAttr { typecode: None })
-                } else {
-                    Some(TableAttr {
-                        typecode: Some(attr.parse_args::<syn::Type>().unwrap()),
-                    })
-                }
-            }
-            None => None,
-        }
+    fn parse(attrs: &Vec<syn::Attribute>) -> Self {
+        Self(
+            attrs
+                .iter()
+                .find(|attr| attr.path.is_ident("table"))
+                .is_some(),
+        )
     }
 }
 
@@ -153,9 +145,9 @@ fn process_data_struct(
     attrs: &Vec<syn::Attribute>,
 ) -> TokenStream2 {
     let struct_attrs = StructAttrs::parse(&attrs);
-    match struct_attrs.table {
-        Some(_) => generate_table_deserialize(data, ident, &struct_attrs),
-        None => generate_struct_deserialize(data, ident, &struct_attrs),
+    match struct_attrs.table.0 {
+        true => generate_table_deserialize(data, ident, &struct_attrs),
+        false => generate_struct_deserialize(data, ident, &struct_attrs),
     }
 }
 
@@ -325,12 +317,8 @@ fn generate_table_deserialize(
     ident: &syn::Ident,
     struct_attrs: &StructAttrs,
 ) -> TokenStream2 {
-    let version_deserialize = generate_version_deserialize(struct_attrs);
-    let body = match struct_attrs.table.as_ref().unwrap().typecode.as_ref() {
-        Some(typecode) => generate_body_deserialize_for_table_with_typecode(data, typecode),
-        None => generate_body_deserialize_for_table_without_typecode(data),
-    };
     let impl_deserialize_header = generate_impl_deserialize_header(data, ident, struct_attrs);
+    let table_body_deserialize = generate_table_body(data, struct_attrs);
     quote! {
         #impl_deserialize_header
             chunk::Begin: Deserialize<V>,
@@ -342,59 +330,54 @@ fn generate_table_deserialize(
             where
                 T: OStream
             {
-                #version_deserialize
-                #body
+                #table_body_deserialize
             }
         }
     }
 }
 
-fn generate_body_deserialize_for_table_without_typecode(data: &syn::DataStruct) -> TokenStream2 {
+fn generate_table_body(data: &syn::DataStruct, struct_attrs: &StructAttrs) -> TokenStream2 {
+    let version_deserialize = generate_version_deserialize(struct_attrs);
+    let table_body_loop = generate_table_body_loop(data);
+    match &struct_attrs.from_chunk_version {
+        Some(version) => {
+            let major_version = version.major;
+            let minor_version = version.minor;
+            quote! {
+                #version_deserialize
+                if version.major() >= #major_version && version.minor() >= #minor_version {
+                    let mut table = Self::default();
+                    #table_body_loop
+                    Ok(table)
+                } else {
+                    Ok(Self::default())
+                }
+            }
+        }
+        None => quote! {
+            let mut table = Self::default();
+            #table_body_loop
+            Ok(table)
+        },
+    }
+}
+
+fn generate_table_body_loop(data: &syn::DataStruct) -> TokenStream2 {
     let field_deserializes = generate_table_field_deserializes(&data.fields);
     quote! {
-        let mut table = Self::default();
         loop {
             let begin = <chunk::Begin as Deserialize<V>>::deserialize(ostream)?;
             let mut chunk = ostream.ochunk(Some(begin.length));
             match begin.typecode {
                 #(#field_deserializes)*
+                typecode::ENDOFTABLE => {
+                    break;
+                }
                 _ => {
                     break;
                 }
             }
             chunk.seek(SeekFrom::End(0)).unwrap();
         }
-        Ok(table)
-    }
-}
-
-fn generate_body_deserialize_for_table_with_typecode(
-    data: &syn::DataStruct,
-    typecode: &syn::Type,
-) -> TokenStream2 {
-    let field_deserializes = generate_table_field_deserializes(&data.fields);
-    quote! {
-        let mut table = Self::default();
-        let begin = <chunk::Begin as Deserialize<V>>::deserialize(ostream)?;
-        let mut properties_chunk = ostream.ochunk(Some(begin.length));
-        if typecode::#typecode == begin.typecode {
-            loop {
-                let begin = <chunk::Begin as Deserialize<V>>::deserialize(&mut properties_chunk)?;
-                let mut chunk = properties_chunk.ochunk(Some(begin.length));
-                match begin.typecode {
-                    #(#field_deserializes)*
-                    typecode::ENDOFTABLE => {
-                        properties_chunk = chunk.into_inner();
-                        break;
-                    }
-                    _ => {
-                    }
-                }
-                chunk.seek(SeekFrom::End(0)).unwrap();
-                properties_chunk = chunk.into_inner();
-            }
-        }
-        properties_chunk.seek(SeekFrom::End(0)).unwrap();
-        Ok(table)
     }
 }
