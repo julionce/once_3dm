@@ -240,7 +240,7 @@ fn generate_body_deserialize_for_table_with_typecode(
                 let mut chunk = properties_chunk.ochunk(Some(begin.length));
                 match begin.typecode {
                     #(#field_deserializes)*
-                    typecode::ENDOFFILE => {
+                    typecode::ENDOFTABLE => {
                         properties_chunk = chunk.into_inner();
                         break;
                     }
