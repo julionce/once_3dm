@@ -126,17 +126,17 @@ impl Deserialize<V70> for Begin {
 }
 
 #[derive(Deserialize)]
-pub struct ShortVersion {
+pub struct BigVersion {
     pub major: i32,
     pub minor: i32,
 }
 
 #[derive(Deserialize)]
-pub struct BigVersion {
+pub struct ShortVersion {
     inner: u8,
 }
 
-impl BigVersion {
+impl ShortVersion {
     pub fn major(&self) -> u8 {
         self.inner >> 4
     }
