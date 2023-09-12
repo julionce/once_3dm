@@ -6,6 +6,7 @@ use syn::{parse_macro_input, Data, DeriveInput, Fields};
 struct StructAttrs {
     table: Option<TableAttr>,
     chunk_version: ChunkVersion,
+    from_chunk_version: Option<FromChunkVersion>,
 }
 
 impl StructAttrs {
@@ -13,6 +14,7 @@ impl StructAttrs {
         Self {
             table: TableAttr::parse(attrs),
             chunk_version: ChunkVersion::parse(attrs),
+            from_chunk_version: FromChunkVersion::parse(attrs),
         }
     }
 }
@@ -44,6 +46,46 @@ impl ChunkVersion {
                 _ => panic!(),
             },
             None => Self::None,
+        }
+    }
+}
+
+struct FromChunkVersion {
+    major: u8,
+    minor: u8,
+}
+
+impl FromChunkVersion {
+    fn parse(attrs: &Vec<syn::Attribute>) -> Option<Self> {
+        match attrs
+            .iter()
+            .find(|attr| attr.path.is_ident("from_chunk_version"))
+        {
+            Some(attr) => match attr.parse_args::<syn::ExprTuple>() {
+                Ok(tuple) => {
+                    if tuple.elems.len() == 2 {
+                        let version = tuple
+                            .elems
+                            .iter()
+                            .map(|expr| match expr {
+                                syn::Expr::Lit(lit) => match &lit.lit {
+                                    syn::Lit::Int(int) => int.base10_parse::<u8>().unwrap(),
+                                    _ => panic!(),
+                                },
+                                _ => panic!(),
+                            })
+                            .collect::<Vec<u8>>();
+                        Some(Self {
+                            major: version[0],
+                            minor: version[1],
+                        })
+                    } else {
+                        panic!()
+                    }
+                }
+                _ => panic!(),
+            },
+            None => None,
         }
     }
 }
@@ -88,7 +130,10 @@ impl FieldAttrs {
     }
 }
 
-#[proc_macro_derive(Deserialize, attributes(table, field, chunk_version))]
+#[proc_macro_derive(
+    Deserialize,
+    attributes(table, field, chunk_version, from_chunk_version)
+)]
 pub fn deserialize_derive(input: TokenStream) -> TokenStream {
     let DeriveInput {
         ident, data, attrs, ..
@@ -117,10 +162,10 @@ fn process_data_struct(
 fn generate_version_deserialize(struct_attrs: &StructAttrs) -> TokenStream2 {
     match struct_attrs.chunk_version {
         ChunkVersion::Big => {
-            quote!(let _version = <chunk::BigVersion as Deserialize<V>>::deserialize(ostream)?;)
+            quote!(let version = <chunk::BigVersion as Deserialize<V>>::deserialize(ostream)?;)
         }
         ChunkVersion::Short => {
-            quote!(let _version = <chunk::ShortVersion as Deserialize<V>>::deserialize(ostream)?;)
+            quote!(let version = <chunk::ShortVersion as Deserialize<V>>::deserialize(ostream)?;)
         }
         ChunkVersion::None => quote!(),
     }
@@ -205,9 +250,8 @@ fn generate_struct_deserialize(
     ident: &syn::Ident,
     struct_attrs: &StructAttrs,
 ) -> TokenStream2 {
-    let version_deserialize = generate_version_deserialize(struct_attrs);
-    let field_deserializes = generate_field_deserializes(&data.fields);
     let impl_deserialize_header = generate_impl_deserialize_header(data, ident, struct_attrs);
+    let struct_body_deserialize = generate_struct_body_deserialize(&data.fields, struct_attrs);
     quote! {
         #impl_deserialize_header
         {
@@ -217,10 +261,35 @@ fn generate_struct_deserialize(
             where
                 T: OStream
             {
-                #version_deserialize
-                Ok(Self {#(#field_deserializes),*})
+                #struct_body_deserialize
             }
         }
+    }
+}
+
+fn generate_struct_body_deserialize(
+    fields: &syn::Fields,
+    struct_attrs: &StructAttrs,
+) -> TokenStream2 {
+    let version_deserialize = generate_version_deserialize(struct_attrs);
+    let field_deserializes = generate_field_deserializes(&fields);
+    match &struct_attrs.from_chunk_version {
+        Some(version) => {
+            let major_version = version.major;
+            let minor_version = version.minor;
+            quote! {
+                #version_deserialize
+                if version.major() >= #major_version && version.minor() >= #minor_version {
+                    Ok(Self {#(#field_deserializes),*})
+                } else {
+                    Ok(Self::default())
+                }
+            }
+        }
+        None => quote! {
+            #version_deserialize
+            Ok(Self {#(#field_deserializes),*})
+        },
     }
 }
 
