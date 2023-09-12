@@ -44,19 +44,25 @@ impl Deserialize<V2> for Begin {
         T: once_io::OStream,
     {
         let typecode = <Typecode as Deserialize<V2>>::deserialize(ostream)?;
-        let is_unsigned = 0 == (typecode::SHORT & typecode)
-            || typecode::RGB == typecode
-            || typecode::RGBDISPLAY == typecode
-            || typecode::PROPERTIES_OPENNURBS_VERSION == typecode
-            || typecode::OBJECT_RECORD_TYPE == typecode;
-        let value = if is_unsigned {
-            <u32 as Deserialize<V2>>::deserialize(ostream)? as i64
+        if typecode::PROPERTIES_OPENNURBS_VERSION == typecode {
+            Ok(Begin {
+                typecode,
+                length: 4u64,
+            })
         } else {
-            <i32 as Deserialize<V2>>::deserialize(ostream)? as i64
-        };
-        let is_long = (0 == typecode & typecode::SHORT) && (0 < value);
-        let length = if is_long { value as u64 } else { 0u64 };
-        Ok(Begin { typecode, length })
+            let is_unsigned = 0 == (typecode::SHORT & typecode)
+                || typecode::RGB == typecode
+                || typecode::RGBDISPLAY == typecode
+                || typecode::OBJECT_RECORD_TYPE == typecode;
+            let value = if is_unsigned {
+                <u32 as Deserialize<V2>>::deserialize(ostream)? as i64
+            } else {
+                <i32 as Deserialize<V2>>::deserialize(ostream)? as i64
+            };
+            let is_long = (0 == typecode & typecode::SHORT) && (0 < value);
+            let length = if is_long { value as u64 } else { 0u64 };
+            Ok(Begin { typecode, length })
+        }
     }
 }
 
