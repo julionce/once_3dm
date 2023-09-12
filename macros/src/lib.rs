@@ -102,12 +102,43 @@ fn generate_field_deserializes(fields: &syn::Fields) -> Vec<TokenStream2> {
     }
 }
 
-fn generate_struct_deserialize(data: &syn::DataStruct, ident: &syn::Ident) -> TokenStream2 {
-    let field_deserializes = generate_field_deserializes(&data.fields);
+fn generate_impl_deserialize_trait_bounds(fields: &syn::Fields) -> Vec<TokenStream2> {
+    match fields {
+        Fields::Named(raw_fields) => raw_fields
+            .named
+            .iter()
+            .map(|raw_field| {
+                let ty = match &raw_field.ty {
+                    syn::Type::Path(value) => {
+                        quote!(#value)
+                    }
+                    _ => panic!(),
+                };
+                quote! {
+                    #ty: Deserialize<V>,
+                    String: From<<#ty as Deserialize<V>>::Error>,
+                }
+            })
+            .collect::<Vec<TokenStream2>>(),
+        _ => Vec::<TokenStream2>::new(),
+    }
+}
+
+fn generate_impl_deserialize_header(data: &syn::DataStruct, ident: &syn::Ident) -> TokenStream2 {
+    let impl_deserialize_trait_bounds = generate_impl_deserialize_trait_bounds(&data.fields);
     quote! {
         impl<V> Deserialize<V> for #ident
         where
             V: FileVersion,
+            #(#impl_deserialize_trait_bounds)*
+    }
+}
+
+fn generate_struct_deserialize(data: &syn::DataStruct, ident: &syn::Ident) -> TokenStream2 {
+    let field_deserializes = generate_field_deserializes(&data.fields);
+    let impl_deserialize_header = generate_impl_deserialize_header(data, ident);
+    quote! {
+        #impl_deserialize_header
         {
             type Error = String;
 
@@ -157,10 +188,9 @@ fn generate_table_deserialize(
         Some(typecode) => generate_body_deserialize_for_table_with_typecode(data, typecode),
         None => generate_body_deserialize_for_table_without_typecode(data),
     };
+    let impl_deserialize_header = generate_impl_deserialize_header(data, ident);
     quote! {
-        impl<V> Deserialize<V> for #ident
-        where
-            V: FileVersion,
+        #impl_deserialize_header
             chunk::Begin: Deserialize<V>,
             String: From<<chunk::Begin as Deserialize<V>>::Error>,
         {
