@@ -5,12 +5,45 @@ use syn::{parse_macro_input, Data, DeriveInput, Fields};
 
 struct StructAttrs {
     table: Option<TableAttr>,
+    chunk_version: ChunkVersion,
 }
 
 impl StructAttrs {
     fn parse(attrs: &Vec<syn::Attribute>) -> Self {
         Self {
             table: TableAttr::parse(attrs),
+            chunk_version: ChunkVersion::parse(attrs),
+        }
+    }
+}
+
+enum ChunkVersion {
+    Short,
+    Big,
+    None,
+}
+
+impl ChunkVersion {
+    fn parse(attrs: &Vec<syn::Attribute>) -> Self {
+        match attrs
+            .iter()
+            .find(|attr| attr.path.is_ident("chunk_version"))
+        {
+            Some(attr) => match attr.parse_args::<syn::Path>() {
+                Ok(expr) => {
+                    if expr.is_ident("short") {
+                        Self::Short
+                    } else if expr.is_ident("big") {
+                        Self::Big
+                    } else if expr.is_ident("none") {
+                        Self::None
+                    } else {
+                        panic!()
+                    }
+                }
+                _ => panic!(),
+            },
+            None => Self::None,
         }
     }
 }
@@ -55,7 +88,7 @@ impl FieldAttrs {
     }
 }
 
-#[proc_macro_derive(Deserialize, attributes(table, field))]
+#[proc_macro_derive(Deserialize, attributes(table, field, chunk_version))]
 pub fn deserialize_derive(input: TokenStream) -> TokenStream {
     let DeriveInput {
         ident, data, attrs, ..
@@ -76,8 +109,20 @@ fn process_data_struct(
 ) -> TokenStream2 {
     let struct_attrs = StructAttrs::parse(&attrs);
     match struct_attrs.table {
-        Some(table_attr) => generate_table_deserialize(data, ident, &table_attr),
-        None => generate_struct_deserialize(data, ident),
+        Some(_) => generate_table_deserialize(data, ident, &struct_attrs),
+        None => generate_struct_deserialize(data, ident, &struct_attrs),
+    }
+}
+
+fn generate_version_deserialize(struct_attrs: &StructAttrs) -> TokenStream2 {
+    match struct_attrs.chunk_version {
+        ChunkVersion::Big => {
+            quote!(let _version = <chunk::BigVersion as Deserialize<V>>::deserialize(ostream)?;)
+        }
+        ChunkVersion::Short => {
+            quote!(let _version = <chunk::ShortVersion as Deserialize<V>>::deserialize(ostream)?;)
+        }
+        ChunkVersion::None => quote!(),
     }
 }
 
@@ -124,19 +169,45 @@ fn generate_impl_deserialize_trait_bounds(fields: &syn::Fields) -> Vec<TokenStre
     }
 }
 
-fn generate_impl_deserialize_header(data: &syn::DataStruct, ident: &syn::Ident) -> TokenStream2 {
+fn generate_impl_deserialize_chunk_trait_bounds(struct_attrs: &StructAttrs) -> TokenStream2 {
+    match struct_attrs.chunk_version {
+        ChunkVersion::Big => quote! {
+            chunk::BigVersion: Deserialize<V>,
+            String: From<<chunk::BigVersion as Deserialize<V>>::Error>,
+        },
+        ChunkVersion::Short => quote! {
+            chunk::ShortVersion: Deserialize<V>,
+            String: From<<chunk::ShortVersion as Deserialize<V>>::Error>,
+        },
+        ChunkVersion::None => quote!(),
+    }
+}
+
+fn generate_impl_deserialize_header(
+    data: &syn::DataStruct,
+    ident: &syn::Ident,
+    struct_attrs: &StructAttrs,
+) -> TokenStream2 {
+    let impl_deserialize_chunk_trait_bounds =
+        generate_impl_deserialize_chunk_trait_bounds(struct_attrs);
     let impl_deserialize_trait_bounds = generate_impl_deserialize_trait_bounds(&data.fields);
     quote! {
         impl<V> Deserialize<V> for #ident
         where
             V: FileVersion,
+            #impl_deserialize_chunk_trait_bounds
             #(#impl_deserialize_trait_bounds)*
     }
 }
 
-fn generate_struct_deserialize(data: &syn::DataStruct, ident: &syn::Ident) -> TokenStream2 {
+fn generate_struct_deserialize(
+    data: &syn::DataStruct,
+    ident: &syn::Ident,
+    struct_attrs: &StructAttrs,
+) -> TokenStream2 {
+    let version_deserialize = generate_version_deserialize(struct_attrs);
     let field_deserializes = generate_field_deserializes(&data.fields);
-    let impl_deserialize_header = generate_impl_deserialize_header(data, ident);
+    let impl_deserialize_header = generate_impl_deserialize_header(data, ident, struct_attrs);
     quote! {
         #impl_deserialize_header
         {
@@ -146,6 +217,7 @@ fn generate_struct_deserialize(data: &syn::DataStruct, ident: &syn::Ident) -> To
             where
                 T: OStream
             {
+                #version_deserialize
                 Ok(Self {#(#field_deserializes),*})
             }
         }
@@ -182,13 +254,14 @@ fn generate_table_field_deserializes(fields: &syn::Fields) -> Vec<TokenStream2> 
 fn generate_table_deserialize(
     data: &syn::DataStruct,
     ident: &syn::Ident,
-    table_attr: &TableAttr,
+    struct_attrs: &StructAttrs,
 ) -> TokenStream2 {
-    let body = match table_attr.typecode.as_ref() {
+    let version_deserialize = generate_version_deserialize(struct_attrs);
+    let body = match struct_attrs.table.as_ref().unwrap().typecode.as_ref() {
         Some(typecode) => generate_body_deserialize_for_table_with_typecode(data, typecode),
         None => generate_body_deserialize_for_table_without_typecode(data),
     };
-    let impl_deserialize_header = generate_impl_deserialize_header(data, ident);
+    let impl_deserialize_header = generate_impl_deserialize_header(data, ident, struct_attrs);
     quote! {
         #impl_deserialize_header
             chunk::Begin: Deserialize<V>,
@@ -200,6 +273,7 @@ fn generate_table_deserialize(
             where
                 T: OStream
             {
+                #version_deserialize
                 #body
             }
         }
