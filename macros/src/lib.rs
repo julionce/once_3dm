@@ -370,11 +370,11 @@ fn generate_table_body_loop(data: &syn::DataStruct) -> TokenStream2 {
             let mut chunk = ostream.ochunk(Some(begin.length));
             match begin.typecode {
                 #(#field_deserializes)*
-                typecode::ENDOFTABLE => {
+                typecode::ENDOFTABLE | typecode::ENDOFFILE => {
+                    chunk.seek(SeekFrom::End(0)).unwrap();
                     break;
                 }
                 _ => {
-                    break;
                 }
             }
             chunk.seek(SeekFrom::End(0)).unwrap();
