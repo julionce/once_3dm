@@ -105,12 +105,14 @@ impl TableAttr {
 
 struct FieldAttrs {
     typecode: Option<syn::Type>,
+    padding: Option<syn::Type>,
 }
 
 impl FieldAttrs {
     fn parse(field: &syn::Field) -> Self {
         Self {
             typecode: Self::parse_typecode(&field.attrs),
+            padding: Self::parse_padding(&field.attrs),
         }
     }
 
@@ -120,11 +122,18 @@ impl FieldAttrs {
             None => None,
         }
     }
+
+    fn parse_padding(attrs: &Vec<syn::Attribute>) -> Option<syn::Type> {
+        match attrs.iter().find(|attr| attr.path.is_ident("padding")) {
+            Some(attr) => Some(attr.parse_args::<syn::Type>().unwrap()),
+            None => None,
+        }
+    }
 }
 
 #[proc_macro_derive(
     Deserialize,
-    attributes(table, field, chunk_version, from_chunk_version)
+    attributes(table, field, chunk_version, from_chunk_version, padding)
 )]
 pub fn deserialize_derive(input: TokenStream) -> TokenStream {
     let DeriveInput {
@@ -163,6 +172,14 @@ fn generate_version_deserialize(struct_attrs: &StructAttrs) -> TokenStream2 {
     }
 }
 
+//TODO: take common factor between this function and generate_table_padding_deserialize
+fn generate_struct_padding_deserialize(field_attrs: &FieldAttrs) -> TokenStream2 {
+    match &field_attrs.padding.as_ref() {
+        Some(ty) => quote!(<#ty as Deserialize<V>>::deserialize(ostream)?;),
+        None => quote!(),
+    }
+}
+
 fn generate_field_deserializes(fields: &syn::Fields) -> Vec<TokenStream2> {
     match fields {
         Fields::Named(raw_fields) => raw_fields
@@ -177,7 +194,9 @@ fn generate_field_deserializes(fields: &syn::Fields) -> Vec<TokenStream2> {
                     _ => panic!(),
                 };
                 let deserialize = quote!(<#ty as Deserialize<V>>::deserialize(ostream)?);
-                quote!(#ident: { #deserialize })
+                let attrs = FieldAttrs::parse(raw_field);
+                let padding_deserialize = generate_struct_padding_deserialize(&attrs);
+                quote!(#ident: { #padding_deserialize #deserialize })
             })
             .collect::<Vec<TokenStream2>>(),
         _ => Vec::<TokenStream2>::new(),
@@ -285,6 +304,13 @@ fn generate_struct_body_deserialize(
     }
 }
 
+fn generate_table_padding_deserialize(field_attrs: &FieldAttrs) -> TokenStream2 {
+    match &field_attrs.padding.as_ref() {
+        Some(ty) => quote!(<#ty as Deserialize<V>>::deserialize(&mut chunk)?;),
+        None => quote!(),
+    }
+}
+
 fn generate_table_field_deserializes(fields: &syn::Fields) -> Vec<TokenStream2> {
     match fields {
         Fields::Named(raw_fields) => raw_fields
@@ -292,7 +318,7 @@ fn generate_table_field_deserializes(fields: &syn::Fields) -> Vec<TokenStream2> 
             .iter()
             .map(|raw_field| {
                 let attrs = FieldAttrs::parse(raw_field);
-                let typecode = attrs.typecode.unwrap();
+                let typecode = attrs.typecode.as_ref().unwrap();
                 let ident = raw_field.ident.as_ref().unwrap();
                 let ty = match &raw_field.ty {
                     syn::Type::Path(value) => {
@@ -301,8 +327,10 @@ fn generate_table_field_deserializes(fields: &syn::Fields) -> Vec<TokenStream2> 
                     _ => panic!(),
                 };
                 let deserialize = quote!(<#ty as Deserialize<V>>::deserialize(&mut chunk)?);
+                let padding_deserialize = generate_table_padding_deserialize(&attrs);
                 quote!(
                     typecode::#typecode => {
+                        #padding_deserialize
                         table.#ident = #deserialize;
                     }
                 )
