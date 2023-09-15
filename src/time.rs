@@ -2,7 +2,7 @@ use crate::deserialize::{Deserialize, FileVersion};
 use once_3dm_macros::Deserialize;
 use once_io::OStream;
 
-#[derive(Deserialize)]
+#[derive(Default, Deserialize)]
 pub struct Time {
     pub second: u32,
     pub minute: u32,
