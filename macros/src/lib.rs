@@ -154,9 +154,31 @@ fn process_data_struct(
     attrs: &Vec<syn::Attribute>,
 ) -> TokenStream2 {
     let struct_attrs = StructAttrs::parse(&attrs);
-    match struct_attrs.table.0 {
-        true => generate_table_deserialize(data, ident, &struct_attrs),
-        false => generate_struct_deserialize(data, ident, &struct_attrs),
+    generate_deserialize(data, ident, &struct_attrs)
+}
+
+fn generate_deserialize(
+    data: &syn::DataStruct,
+    ident: &syn::Ident,
+    struct_attrs: &StructAttrs,
+) -> TokenStream2 {
+    let impl_deserialize_header = generate_impl_deserialize_header(data, ident, struct_attrs);
+    let body = match struct_attrs.table.0 {
+        true => generate_table_body_deserialize(data, struct_attrs),
+        false => generate_struct_body_deserialize(&data.fields, struct_attrs),
+    };
+    quote! {
+        #impl_deserialize_header
+        {
+            type Error = String;
+
+            fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+            where
+                T: OStream
+            {
+                #body
+            }
+        }
     }
 }
 
@@ -271,28 +293,6 @@ fn generate_impl_deserialize_header(
     }
 }
 
-fn generate_struct_deserialize(
-    data: &syn::DataStruct,
-    ident: &syn::Ident,
-    struct_attrs: &StructAttrs,
-) -> TokenStream2 {
-    let impl_deserialize_header = generate_impl_deserialize_header(data, ident, struct_attrs);
-    let struct_body_deserialize = generate_struct_body_deserialize(&data.fields, struct_attrs);
-    quote! {
-        #impl_deserialize_header
-        {
-            type Error = String;
-
-            fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
-            where
-                T: OStream
-            {
-                #struct_body_deserialize
-            }
-        }
-    }
-}
-
 fn generate_struct_body_deserialize(
     fields: &syn::Fields,
     struct_attrs: &StructAttrs,
@@ -355,29 +355,10 @@ fn generate_table_field_deserializes(fields: &syn::Fields) -> Vec<TokenStream2> 
     }
 }
 
-fn generate_table_deserialize(
+fn generate_table_body_deserialize(
     data: &syn::DataStruct,
-    ident: &syn::Ident,
     struct_attrs: &StructAttrs,
 ) -> TokenStream2 {
-    let impl_deserialize_header = generate_impl_deserialize_header(data, ident, struct_attrs);
-    let table_body_deserialize = generate_table_body(data, struct_attrs);
-    quote! {
-        #impl_deserialize_header
-        {
-            type Error = String;
-
-            fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
-            where
-                T: OStream
-            {
-                #table_body_deserialize
-            }
-        }
-    }
-}
-
-fn generate_table_body(data: &syn::DataStruct, struct_attrs: &StructAttrs) -> TokenStream2 {
     let version_deserialize = generate_version_deserialize(struct_attrs);
     let table_body_loop = generate_table_body_loop(data);
     match &struct_attrs.from_chunk_version {
