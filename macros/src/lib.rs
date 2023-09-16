@@ -254,7 +254,7 @@ fn generate_struct_body_deserialize(
     struct_attrs: &StructAttrs,
 ) -> TokenStream2 {
     let version_deserialize = generate_version_deserialize(struct_attrs);
-    let field_deserializes = generate_field_deserializes(&fields);
+    let field_deserializes = generate_field_deserializes(&fields, struct_attrs);
     match &struct_attrs.from_chunk_version {
         Some(version) => {
             let major_version = version.major;
@@ -280,7 +280,7 @@ fn generate_table_body_deserialize(
     struct_attrs: &StructAttrs,
 ) -> TokenStream2 {
     let version_deserialize = generate_version_deserialize(struct_attrs);
-    let table_body_loop = generate_table_body_loop(data);
+    let table_body_loop = generate_table_body_loop(data, struct_attrs);
     match &struct_attrs.from_chunk_version {
         Some(version) => {
             let major_version = version.major;
@@ -317,15 +317,23 @@ fn generate_version_deserialize(struct_attrs: &StructAttrs) -> TokenStream2 {
     }
 }
 
-//TODO: take common factor between this function and generate_table_padding_deserialize
-fn generate_struct_padding_deserialize(field_attrs: &FieldAttrs) -> TokenStream2 {
+fn generate_padding_deserialize(
+    field_attrs: &FieldAttrs,
+    struct_attrs: &StructAttrs,
+) -> TokenStream2 {
     match &field_attrs.padding.as_ref() {
-        Some(ty) => quote!(<#ty as Deserialize<V>>::deserialize(ostream)?;),
+        Some(ty) => match struct_attrs.table.0 {
+            true => quote!(<#ty as Deserialize<V>>::deserialize(&mut chunk)?;),
+            false => quote!(<#ty as Deserialize<V>>::deserialize(ostream)?;),
+        },
         None => quote!(),
     }
 }
 
-fn generate_field_deserializes(fields: &syn::Fields) -> Vec<TokenStream2> {
+fn generate_field_deserializes(
+    fields: &syn::Fields,
+    struct_attrs: &StructAttrs,
+) -> Vec<TokenStream2> {
     match fields {
         Fields::Named(raw_fields) => raw_fields
             .named
@@ -340,7 +348,7 @@ fn generate_field_deserializes(fields: &syn::Fields) -> Vec<TokenStream2> {
                 };
                 let deserialize = quote!(<#ty as Deserialize<V>>::deserialize(ostream)?);
                 let attrs = FieldAttrs::parse(raw_field);
-                let padding_deserialize = generate_struct_padding_deserialize(&attrs);
+                let padding_deserialize = generate_padding_deserialize(&attrs, struct_attrs);
                 quote!(#ident: { #padding_deserialize #deserialize })
             })
             .collect::<Vec<TokenStream2>>(),
@@ -348,14 +356,10 @@ fn generate_field_deserializes(fields: &syn::Fields) -> Vec<TokenStream2> {
     }
 }
 
-fn generate_table_padding_deserialize(field_attrs: &FieldAttrs) -> TokenStream2 {
-    match &field_attrs.padding.as_ref() {
-        Some(ty) => quote!(<#ty as Deserialize<V>>::deserialize(&mut chunk)?;),
-        None => quote!(),
-    }
-}
-
-fn generate_table_field_deserializes(fields: &syn::Fields) -> Vec<TokenStream2> {
+fn generate_table_field_deserializes(
+    fields: &syn::Fields,
+    struct_attrs: &StructAttrs,
+) -> Vec<TokenStream2> {
     match fields {
         Fields::Named(raw_fields) => raw_fields
             .named
@@ -371,7 +375,7 @@ fn generate_table_field_deserializes(fields: &syn::Fields) -> Vec<TokenStream2> 
                     _ => panic!(),
                 };
                 let deserialize = quote!(<#ty as Deserialize<V>>::deserialize(&mut chunk)?);
-                let padding_deserialize = generate_table_padding_deserialize(&attrs);
+                let padding_deserialize = generate_padding_deserialize(&attrs, struct_attrs);
                 quote!(
                     typecode::#typecode => {
                         #padding_deserialize
@@ -384,8 +388,8 @@ fn generate_table_field_deserializes(fields: &syn::Fields) -> Vec<TokenStream2> 
     }
 }
 
-fn generate_table_body_loop(data: &syn::DataStruct) -> TokenStream2 {
-    let field_deserializes = generate_table_field_deserializes(&data.fields);
+fn generate_table_body_loop(data: &syn::DataStruct, struct_attrs: &StructAttrs) -> TokenStream2 {
+    let field_deserializes = generate_table_field_deserializes(&data.fields, struct_attrs);
     quote! {
         loop {
             let begin = <chunk::Begin as Deserialize<V>>::deserialize(ostream)?;
