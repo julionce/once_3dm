@@ -185,13 +185,13 @@ fn generate_header_deserialize(
     struct_attrs: &StructAttrs,
 ) -> TokenStream2 {
     let chunk_trait_bounds = generate_chunk_trait_bounds_deserialize(struct_attrs);
-    let impl_deserialize_trait_bounds = generate_impl_deserialize_trait_bounds(&data.fields);
+    let type_trait_bounds = generate_type_trait_bounds_deserialize(&data.fields);
     quote! {
         impl<V> Deserialize<V> for #ident
         where
             V: FileVersion,
             #chunk_trait_bounds
-            #(#impl_deserialize_trait_bounds)*
+            #(#type_trait_bounds)*
     }
 }
 
@@ -217,6 +217,28 @@ fn generate_chunk_trait_bounds_deserialize(struct_attrs: &StructAttrs) -> TokenS
     quote! {
         #chunk_version_trait_bounds
         #chunk_begin_trait_bounds
+    }
+}
+
+fn generate_type_trait_bounds_deserialize(fields: &syn::Fields) -> Vec<TokenStream2> {
+    match fields {
+        Fields::Named(raw_fields) => raw_fields
+            .named
+            .iter()
+            .map(|raw_field| {
+                let ty = match &raw_field.ty {
+                    syn::Type::Path(value) => {
+                        quote!(#value)
+                    }
+                    _ => panic!(),
+                };
+                quote! {
+                    #ty: Deserialize<V>,
+                    String: From<<#ty as Deserialize<V>>::Error>,
+                }
+            })
+            .collect::<Vec<TokenStream2>>(),
+        _ => Vec::<TokenStream2>::new(),
     }
 }
 
@@ -320,28 +342,6 @@ fn generate_field_deserializes(fields: &syn::Fields) -> Vec<TokenStream2> {
                 let attrs = FieldAttrs::parse(raw_field);
                 let padding_deserialize = generate_struct_padding_deserialize(&attrs);
                 quote!(#ident: { #padding_deserialize #deserialize })
-            })
-            .collect::<Vec<TokenStream2>>(),
-        _ => Vec::<TokenStream2>::new(),
-    }
-}
-
-fn generate_impl_deserialize_trait_bounds(fields: &syn::Fields) -> Vec<TokenStream2> {
-    match fields {
-        Fields::Named(raw_fields) => raw_fields
-            .named
-            .iter()
-            .map(|raw_field| {
-                let ty = match &raw_field.ty {
-                    syn::Type::Path(value) => {
-                        quote!(#value)
-                    }
-                    _ => panic!(),
-                };
-                quote! {
-                    #ty: Deserialize<V>,
-                    String: From<<#ty as Deserialize<V>>::Error>,
-                }
             })
             .collect::<Vec<TokenStream2>>(),
         _ => Vec::<TokenStream2>::new(),
