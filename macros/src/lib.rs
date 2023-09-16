@@ -162,13 +162,13 @@ fn generate_deserialize(
     ident: &syn::Ident,
     struct_attrs: &StructAttrs,
 ) -> TokenStream2 {
-    let impl_deserialize_header = generate_impl_deserialize_header(data, ident, struct_attrs);
+    let header = generate_header_deserialize(data, ident, struct_attrs);
     let body = match struct_attrs.table.0 {
         true => generate_table_body_deserialize(data, struct_attrs),
         false => generate_struct_body_deserialize(&data.fields, struct_attrs),
     };
     quote! {
-        #impl_deserialize_header
+        #header
         {
             type Error = String;
 
@@ -179,6 +179,23 @@ fn generate_deserialize(
                 #body
             }
         }
+    }
+}
+
+fn generate_header_deserialize(
+    data: &syn::DataStruct,
+    ident: &syn::Ident,
+    struct_attrs: &StructAttrs,
+) -> TokenStream2 {
+    let impl_deserialize_chunk_trait_bounds =
+        generate_impl_deserialize_chunk_trait_bounds(struct_attrs);
+    let impl_deserialize_trait_bounds = generate_impl_deserialize_trait_bounds(&data.fields);
+    quote! {
+        impl<V> Deserialize<V> for #ident
+        where
+            V: FileVersion,
+            #impl_deserialize_chunk_trait_bounds
+            #(#impl_deserialize_trait_bounds)*
     }
 }
 
@@ -273,23 +290,6 @@ fn generate_chunk_begin_trait_bounds(struct_attrs: &StructAttrs) -> TokenStream2
             String: From<<chunk::Begin as Deserialize<V>>::Error>,
         },
         false => quote!(),
-    }
-}
-
-fn generate_impl_deserialize_header(
-    data: &syn::DataStruct,
-    ident: &syn::Ident,
-    struct_attrs: &StructAttrs,
-) -> TokenStream2 {
-    let impl_deserialize_chunk_trait_bounds =
-        generate_impl_deserialize_chunk_trait_bounds(struct_attrs);
-    let impl_deserialize_trait_bounds = generate_impl_deserialize_trait_bounds(&data.fields);
-    quote! {
-        impl<V> Deserialize<V> for #ident
-        where
-            V: FileVersion,
-            #impl_deserialize_chunk_trait_bounds
-            #(#impl_deserialize_trait_bounds)*
     }
 }
 
