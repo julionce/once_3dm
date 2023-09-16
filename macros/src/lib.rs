@@ -163,10 +163,7 @@ fn generate_deserialize(
     struct_attrs: &StructAttrs,
 ) -> TokenStream2 {
     let header = generate_header_deserialize(data, ident, struct_attrs);
-    let body = match struct_attrs.table.0 {
-        true => generate_table_body_deserialize(data, struct_attrs),
-        false => generate_struct_body_deserialize(&data.fields, struct_attrs),
-    };
+    let body = generate_body_deserialize(data, struct_attrs);
     quote! {
         #header
         {
@@ -196,6 +193,69 @@ fn generate_header_deserialize(
             V: FileVersion,
             #impl_deserialize_chunk_trait_bounds
             #(#impl_deserialize_trait_bounds)*
+    }
+}
+
+fn generate_body_deserialize(data: &syn::DataStruct, struct_attrs: &StructAttrs) -> TokenStream2 {
+    match struct_attrs.table.0 {
+        true => generate_table_body_deserialize(data, struct_attrs),
+        false => generate_struct_body_deserialize(&data.fields, struct_attrs),
+    }
+}
+
+fn generate_struct_body_deserialize(
+    fields: &syn::Fields,
+    struct_attrs: &StructAttrs,
+) -> TokenStream2 {
+    let version_deserialize = generate_version_deserialize(struct_attrs);
+    let field_deserializes = generate_field_deserializes(&fields);
+    match &struct_attrs.from_chunk_version {
+        Some(version) => {
+            let major_version = version.major;
+            let minor_version = version.minor;
+            quote! {
+                #version_deserialize
+                if version.major() >= #major_version && version.minor() >= #minor_version {
+                    Ok(Self {#(#field_deserializes),*})
+                } else {
+                    Ok(Self::default())
+                }
+            }
+        }
+        None => quote! {
+            #version_deserialize
+            Ok(Self {#(#field_deserializes),*})
+        },
+    }
+}
+
+fn generate_table_body_deserialize(
+    data: &syn::DataStruct,
+    struct_attrs: &StructAttrs,
+) -> TokenStream2 {
+    let version_deserialize = generate_version_deserialize(struct_attrs);
+    let table_body_loop = generate_table_body_loop(data);
+    match &struct_attrs.from_chunk_version {
+        Some(version) => {
+            let major_version = version.major;
+            let minor_version = version.minor;
+            quote! {
+                #version_deserialize
+                if version.major() >= #major_version && version.minor() >= #minor_version {
+                    let mut table = Self::default();
+                    #table_body_loop
+                    Ok(table)
+                } else {
+                    Ok(Self::default())
+                }
+            }
+        }
+        None => quote! {
+            let mut table = Self::default();
+            #version_deserialize
+            #table_body_loop
+            Ok(table)
+        },
     }
 }
 
@@ -293,32 +353,6 @@ fn generate_chunk_begin_trait_bounds(struct_attrs: &StructAttrs) -> TokenStream2
     }
 }
 
-fn generate_struct_body_deserialize(
-    fields: &syn::Fields,
-    struct_attrs: &StructAttrs,
-) -> TokenStream2 {
-    let version_deserialize = generate_version_deserialize(struct_attrs);
-    let field_deserializes = generate_field_deserializes(&fields);
-    match &struct_attrs.from_chunk_version {
-        Some(version) => {
-            let major_version = version.major;
-            let minor_version = version.minor;
-            quote! {
-                #version_deserialize
-                if version.major() >= #major_version && version.minor() >= #minor_version {
-                    Ok(Self {#(#field_deserializes),*})
-                } else {
-                    Ok(Self::default())
-                }
-            }
-        }
-        None => quote! {
-            #version_deserialize
-            Ok(Self {#(#field_deserializes),*})
-        },
-    }
-}
-
 fn generate_table_padding_deserialize(field_attrs: &FieldAttrs) -> TokenStream2 {
     match &field_attrs.padding.as_ref() {
         Some(ty) => quote!(<#ty as Deserialize<V>>::deserialize(&mut chunk)?;),
@@ -352,35 +386,6 @@ fn generate_table_field_deserializes(fields: &syn::Fields) -> Vec<TokenStream2> 
             })
             .collect::<Vec<TokenStream2>>(),
         _ => Vec::<TokenStream2>::new(),
-    }
-}
-
-fn generate_table_body_deserialize(
-    data: &syn::DataStruct,
-    struct_attrs: &StructAttrs,
-) -> TokenStream2 {
-    let version_deserialize = generate_version_deserialize(struct_attrs);
-    let table_body_loop = generate_table_body_loop(data);
-    match &struct_attrs.from_chunk_version {
-        Some(version) => {
-            let major_version = version.major;
-            let minor_version = version.minor;
-            quote! {
-                #version_deserialize
-                if version.major() >= #major_version && version.minor() >= #minor_version {
-                    let mut table = Self::default();
-                    #table_body_loop
-                    Ok(table)
-                } else {
-                    Ok(Self::default())
-                }
-            }
-        }
-        None => quote! {
-            let mut table = Self::default();
-            #table_body_loop
-            Ok(table)
-        },
     }
 }
 
