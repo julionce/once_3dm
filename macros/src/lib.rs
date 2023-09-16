@@ -244,56 +244,58 @@ fn generate_type_trait_bounds_deserialize(fields: &syn::Fields) -> Vec<TokenStre
 
 fn generate_body_deserialize(data: &syn::DataStruct, struct_attrs: &StructAttrs) -> TokenStream2 {
     let version_deserialize = generate_version_deserialize(struct_attrs);
+    let body_core = generate_body_core_deserialize(data, struct_attrs);
     match &struct_attrs.from_chunk_version {
         Some(version) => {
             let major_version = version.major;
             let minor_version = version.minor;
-            match struct_attrs.table.0 {
-                true => {
-                    let table_body_loop = generate_table_body_loop(data, struct_attrs);
-                    quote! {
-                        #version_deserialize
-                        if version.major() >= #major_version && version.minor() >= #minor_version {
-                            let mut table = Self::default();
-                            #table_body_loop
-                            Ok(table)
-                        } else {
-                            Ok(Self::default())
-                        }
-                    }
-                }
-                false => {
-                    let field_deserializes =
-                        generate_field_deserializes(&data.fields, struct_attrs);
-                    quote! {
-                        #version_deserialize
-                        if version.major() >= #major_version && version.minor() >= #minor_version {
-                            Ok(Self {#(#field_deserializes),*})
-                        } else {
-                            Ok(Self::default())
-                        }
-                    }
+            quote! {
+                #version_deserialize
+                if version.major() >= #major_version && version.minor() >= #minor_version {
+                    #body_core
+                } else {
+                    Ok(Self::default())
                 }
             }
         }
-        None => match struct_attrs.table.0 {
-            true => {
-                let table_body_loop = generate_table_body_loop(data, struct_attrs);
-                quote! {
-                    #version_deserialize
-                    let mut table = Self::default();
-                    #table_body_loop
-                    Ok(table)
-                }
-            }
-            false => {
-                let field_deserializes = generate_field_deserializes(&data.fields, struct_attrs);
-                quote! {
-                    #version_deserialize
-                    Ok(Self {#(#field_deserializes),*})
-                }
-            }
+        None => quote! {
+            #version_deserialize
+            #body_core
         },
+    }
+}
+
+fn generate_body_core_deserialize(
+    data: &syn::DataStruct,
+    struct_attrs: &StructAttrs,
+) -> TokenStream2 {
+    let field_deserializes = generate_field_deserializes(&data.fields, struct_attrs);
+    match struct_attrs.table.0 {
+        true => {
+            quote! {
+                let mut table = Self::default();
+                loop {
+                    let begin = <chunk::Begin as Deserialize<V>>::deserialize(ostream)?;
+                    let mut chunk = ostream.ochunk(Some(begin.length));
+                    match begin.typecode {
+                        #(#field_deserializes)*
+                        typecode::ENDOFTABLE | typecode::ENDOFFILE => {
+                            chunk.seek(SeekFrom::End(0)).unwrap();
+                            break;
+                        }
+                        _ => {
+                        }
+                    }
+                    chunk.seek(SeekFrom::End(0)).unwrap();
+                }
+                Ok(table)
+            }
+        }
+        false => {
+            quote! {
+                Ok(Self {#(#field_deserializes),*})
+            }
+        }
     }
 }
 
@@ -359,25 +361,5 @@ fn generate_field_deserializes(
             })
             .collect::<Vec<TokenStream2>>(),
         _ => Vec::<TokenStream2>::new(),
-    }
-}
-
-fn generate_table_body_loop(data: &syn::DataStruct, struct_attrs: &StructAttrs) -> TokenStream2 {
-    let field_deserializes = generate_field_deserializes(&data.fields, struct_attrs);
-    quote! {
-        loop {
-            let begin = <chunk::Begin as Deserialize<V>>::deserialize(ostream)?;
-            let mut chunk = ostream.ochunk(Some(begin.length));
-            match begin.typecode {
-                #(#field_deserializes)*
-                typecode::ENDOFTABLE | typecode::ENDOFFILE => {
-                    chunk.seek(SeekFrom::End(0)).unwrap();
-                    break;
-                }
-                _ => {
-                }
-            }
-            chunk.seek(SeekFrom::End(0)).unwrap();
-        }
     }
 }
