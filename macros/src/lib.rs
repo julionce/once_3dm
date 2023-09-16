@@ -196,7 +196,13 @@ fn generate_header_deserialize(
 }
 
 fn generate_chunk_trait_bounds_deserialize(struct_attrs: &StructAttrs) -> TokenStream2 {
-    let chunk_begin_trait_bounds = generate_chunk_begin_trait_bounds(struct_attrs);
+    let chunk_begin_trait_bounds = match struct_attrs.table.0 {
+        true => quote! {
+            chunk::Begin: Deserialize<V>,
+            String: From<<chunk::Begin as Deserialize<V>>::Error>,
+        },
+        false => quote!(),
+    };
     let chunk_version_trait_bounds = match struct_attrs.chunk_version {
         ChunkVersion::Big => quote! {
             chunk::BigVersion: Deserialize<V>,
@@ -339,16 +345,6 @@ fn generate_impl_deserialize_trait_bounds(fields: &syn::Fields) -> Vec<TokenStre
             })
             .collect::<Vec<TokenStream2>>(),
         _ => Vec::<TokenStream2>::new(),
-    }
-}
-
-fn generate_chunk_begin_trait_bounds(struct_attrs: &StructAttrs) -> TokenStream2 {
-    match struct_attrs.table.0 {
-        true => quote! {
-            chunk::Begin: Deserialize<V>,
-            String: From<<chunk::Begin as Deserialize<V>>::Error>,
-        },
-        false => quote!(),
     }
 }
 
