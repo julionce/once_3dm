@@ -184,15 +184,33 @@ fn generate_header_deserialize(
     ident: &syn::Ident,
     struct_attrs: &StructAttrs,
 ) -> TokenStream2 {
-    let impl_deserialize_chunk_trait_bounds =
-        generate_impl_deserialize_chunk_trait_bounds(struct_attrs);
+    let chunk_trait_bounds = generate_chunk_trait_bounds_deserialize(struct_attrs);
     let impl_deserialize_trait_bounds = generate_impl_deserialize_trait_bounds(&data.fields);
     quote! {
         impl<V> Deserialize<V> for #ident
         where
             V: FileVersion,
-            #impl_deserialize_chunk_trait_bounds
+            #chunk_trait_bounds
             #(#impl_deserialize_trait_bounds)*
+    }
+}
+
+fn generate_chunk_trait_bounds_deserialize(struct_attrs: &StructAttrs) -> TokenStream2 {
+    let chunk_begin_trait_bounds = generate_chunk_begin_trait_bounds(struct_attrs);
+    let chunk_version_trait_bounds = match struct_attrs.chunk_version {
+        ChunkVersion::Big => quote! {
+            chunk::BigVersion: Deserialize<V>,
+            String: From<<chunk::BigVersion as Deserialize<V>>::Error>,
+        },
+        ChunkVersion::Short => quote! {
+            chunk::ShortVersion: Deserialize<V>,
+            String: From<<chunk::ShortVersion as Deserialize<V>>::Error>,
+        },
+        ChunkVersion::None => quote! {},
+    };
+    quote! {
+        #chunk_version_trait_bounds
+        #chunk_begin_trait_bounds
     }
 }
 
@@ -321,25 +339,6 @@ fn generate_impl_deserialize_trait_bounds(fields: &syn::Fields) -> Vec<TokenStre
             })
             .collect::<Vec<TokenStream2>>(),
         _ => Vec::<TokenStream2>::new(),
-    }
-}
-
-fn generate_impl_deserialize_chunk_trait_bounds(struct_attrs: &StructAttrs) -> TokenStream2 {
-    let chunk_begin_trait_bounds = generate_chunk_begin_trait_bounds(struct_attrs);
-    let chunk_version_trait_bounds = match struct_attrs.chunk_version {
-        ChunkVersion::Big => quote! {
-            chunk::BigVersion: Deserialize<V>,
-            String: From<<chunk::BigVersion as Deserialize<V>>::Error>,
-        },
-        ChunkVersion::Short => quote! {
-            chunk::ShortVersion: Deserialize<V>,
-            String: From<<chunk::ShortVersion as Deserialize<V>>::Error>,
-        },
-        ChunkVersion::None => quote! {},
-    };
-    quote! {
-        #chunk_version_trait_bounds
-        #chunk_begin_trait_bounds
     }
 }
 
