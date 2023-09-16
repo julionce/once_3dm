@@ -226,7 +226,8 @@ fn generate_impl_deserialize_trait_bounds(fields: &syn::Fields) -> Vec<TokenStre
 }
 
 fn generate_impl_deserialize_chunk_trait_bounds(struct_attrs: &StructAttrs) -> TokenStream2 {
-    match struct_attrs.chunk_version {
+    let chunk_begin_trait_bounds = generate_chunk_begin_trait_bounds(struct_attrs);
+    let chunk_version_trait_bounds = match struct_attrs.chunk_version {
         ChunkVersion::Big => quote! {
             chunk::BigVersion: Deserialize<V>,
             String: From<<chunk::BigVersion as Deserialize<V>>::Error>,
@@ -235,7 +236,21 @@ fn generate_impl_deserialize_chunk_trait_bounds(struct_attrs: &StructAttrs) -> T
             chunk::ShortVersion: Deserialize<V>,
             String: From<<chunk::ShortVersion as Deserialize<V>>::Error>,
         },
-        ChunkVersion::None => quote!(),
+        ChunkVersion::None => quote! {},
+    };
+    quote! {
+        #chunk_version_trait_bounds
+        #chunk_begin_trait_bounds
+    }
+}
+
+fn generate_chunk_begin_trait_bounds(struct_attrs: &StructAttrs) -> TokenStream2 {
+    match struct_attrs.table.0 {
+        true => quote! {
+            chunk::Begin: Deserialize<V>,
+            String: From<<chunk::Begin as Deserialize<V>>::Error>,
+        },
+        false => quote!(),
     }
 }
 
@@ -349,8 +364,6 @@ fn generate_table_deserialize(
     let table_body_deserialize = generate_table_body(data, struct_attrs);
     quote! {
         #impl_deserialize_header
-            chunk::Begin: Deserialize<V>,
-            String: From<<chunk::Begin as Deserialize<V>>::Error>,
         {
             type Error = String;
 
