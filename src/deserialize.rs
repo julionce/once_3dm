@@ -175,6 +175,32 @@ impl Deserialize<V70> for String {
     }
 }
 
+impl<V, T> Deserialize<V> for Vec<T>
+where
+    V: FileVersion,
+    T: Deserialize<V>,
+    String: From<<T as Deserialize<V>>::Error>,
+{
+    type Error = String;
+
+    fn deserialize<U>(ostream: &mut U) -> Result<Self, Self::Error>
+    where
+        U: OStream,
+    {
+        match ostream.stream_len() {
+            Ok(stream_len) => {
+                let len = stream_len / mem::size_of::<T>() as u64;
+                let mut data: Vec<T> = vec![];
+                for _ in 0..len {
+                    data.push(T::deserialize(ostream)?);
+                }
+                Ok(data)
+            }
+            Err(e) => Err(e.to_string()),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::io::Cursor;
@@ -237,4 +263,20 @@ mod tests {
     generate_deserialize_num_test! {deserialize_f64_ram_val, f64, 11f64}
     generate_deserialize_num_test! {deserialize_f64_max_val, f64, f64::MAX}
     generate_deserialize_num_test! {deserialize_f64_min_val, f64, f64::MIN}
+
+    #[test]
+    fn deserialize_vector_size_fill() {
+        let data = [11u8, 0, 89u8, 0];
+        let mut reader = Cursor::new(data);
+        let result = <Vec<u16> as Deserialize<V1>>::deserialize(&mut reader).unwrap();
+        assert_eq!(result, vec![11u16, 89u16]);
+    }
+
+    #[test]
+    fn deserialize_vector_size_not_fill() {
+        let data = [11u8, 0, 89u8, 0, 0];
+        let mut reader = Cursor::new(data);
+        let result = <Vec<u16> as Deserialize<V1>>::deserialize(&mut reader).unwrap();
+        assert_eq!(result, vec![11u16, 89u16]);
+    }
 }
