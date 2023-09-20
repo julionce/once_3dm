@@ -106,6 +106,7 @@ impl TableAttr {
 struct FieldAttrs {
     typecode: Option<syn::Type>,
     padding: Option<syn::Type>,
+    underlying_type: Option<syn::Type>,
 }
 
 impl FieldAttrs {
@@ -113,6 +114,7 @@ impl FieldAttrs {
         Self {
             typecode: Self::parse_typecode(&field.attrs),
             padding: Self::parse_padding(&field.attrs),
+            underlying_type: Self::parse_underlying_type(&field.attrs),
         }
     }
 
@@ -129,11 +131,28 @@ impl FieldAttrs {
             None => None,
         }
     }
+
+    fn parse_underlying_type(attrs: &Vec<syn::Attribute>) -> Option<syn::Type> {
+        match attrs
+            .iter()
+            .find(|attr| attr.path.is_ident("underlying_type"))
+        {
+            Some(attr) => Some(attr.parse_args::<syn::Type>().unwrap()),
+            None => None,
+        }
+    }
 }
 
 #[proc_macro_derive(
     Deserialize,
-    attributes(table, field, chunk_version, from_chunk_version, padding)
+    attributes(
+        table,
+        field,
+        chunk_version,
+        from_chunk_version,
+        padding,
+        underlying_type
+    )
 )]
 pub fn deserialize_derive(input: TokenStream) -> TokenStream {
     let DeriveInput {
@@ -344,7 +363,10 @@ fn generate_field_deserializes(
                 let padding_deserialize = generate_padding_deserialize(&attrs, struct_attrs);
                 match struct_attrs.table.0 {
                     true => {
-                        let deserialize = quote!(<#ty as Deserialize<V>>::deserialize(&mut chunk)?);
+                        let deserialize = match attrs.underlying_type {
+                            Some(underlying_ty) => quote!(<#underlying_ty as Deserialize<V>>::deserialize(&mut chunk)?.into()),
+                            None => quote!(<#ty as Deserialize<V>>::deserialize(&mut chunk)?),
+                        };
                         let typecode = attrs.typecode.as_ref().unwrap();
                         quote!(
                             typecode::#typecode => {
@@ -354,7 +376,10 @@ fn generate_field_deserializes(
                         )
                     }
                     false => {
-                        let deserialize = quote!(<#ty as Deserialize<V>>::deserialize(ostream)?);
+                        let deserialize = match attrs.underlying_type {
+                            Some(underlying_ty) => quote!(<#underlying_ty as Deserialize<V>>::deserialize(ostream)?.into()),
+                            None => quote!(<#ty as Deserialize<V>>::deserialize(ostream)?),
+                        };
                         quote!(#ident: { #padding_deserialize #deserialize })
                     }
                 }
