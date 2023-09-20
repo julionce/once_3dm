@@ -3,7 +3,7 @@ use std::mem::size_of;
 use crate::{
     chunk,
     compressed_buffer::CompressedBuffer,
-    deserialize::{Deserialize, FileVersion, V1, V2, V3},
+    deserialize::{Deserialize, FileVersion},
 };
 
 use once_io::OStream;
