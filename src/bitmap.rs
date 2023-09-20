@@ -88,7 +88,7 @@ where
     }
 }
 
-struct CompressedBitmap {
+pub struct CompressedBitmap {
     inner: Bitmap,
 }
 
