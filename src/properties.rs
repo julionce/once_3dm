@@ -58,6 +58,36 @@ mod v2 {
     }
 }
 
+mod v3 {
+    use super::v2;
+
+    pub type Properties = v2::Properties;
+}
+
+mod v4 {
+    use super::v2;
+
+    pub type Properties = v2::Properties;
+}
+
+mod v50 {
+    use super::v2;
+
+    pub type Properties = v2::Properties;
+}
+
+mod v60 {
+    use super::v2;
+
+    pub type Properties = v2::Properties;
+}
+
+mod v70 {
+    use super::v2;
+
+    pub type Properties = v2::Properties;
+}
+
 impl From<v1::Properties> for Properties {
     fn from(_value: v1::Properties) -> Self {
         Self::default()
@@ -106,7 +136,7 @@ impl Deserialize<V3> for Properties {
     where
         T: once_io::OStream,
     {
-        Ok(<v2::Properties as Deserialize<V2>>::deserialize(ostream)?.into())
+        Ok(<v3::Properties as Deserialize<V2>>::deserialize(ostream)?.into())
     }
 }
 
@@ -117,7 +147,7 @@ impl Deserialize<V4> for Properties {
     where
         T: once_io::OStream,
     {
-        Ok(<v2::Properties as Deserialize<V2>>::deserialize(ostream)?.into())
+        Ok(<v4::Properties as Deserialize<V2>>::deserialize(ostream)?.into())
     }
 }
 
@@ -128,7 +158,7 @@ impl Deserialize<V50> for Properties {
     where
         T: once_io::OStream,
     {
-        Ok(<v2::Properties as Deserialize<V2>>::deserialize(ostream)?.into())
+        Ok(<v50::Properties as Deserialize<V2>>::deserialize(ostream)?.into())
     }
 }
 
@@ -139,7 +169,7 @@ impl Deserialize<V60> for Properties {
     where
         T: once_io::OStream,
     {
-        Ok(<v2::Properties as Deserialize<V2>>::deserialize(ostream)?.into())
+        Ok(<v60::Properties as Deserialize<V2>>::deserialize(ostream)?.into())
     }
 }
 
@@ -150,6 +180,6 @@ impl Deserialize<V70> for Properties {
     where
         T: once_io::OStream,
     {
-        Ok(<v2::Properties as Deserialize<V2>>::deserialize(ostream)?.into())
+        Ok(<v70::Properties as Deserialize<V2>>::deserialize(ostream)?.into())
     }
 }
