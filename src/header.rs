@@ -13,7 +13,7 @@ pub struct Header {
 }
 
 impl Header {
-    const BEGIN: &[u8] = "3D Geometry File Format ".as_bytes();
+    const BEGIN: &'static [u8] = "3D Geometry File Format ".as_bytes();
 }
 
 impl Deserialize<V1> for Header {
