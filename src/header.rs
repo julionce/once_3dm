@@ -62,7 +62,7 @@ mod tests {
 
     #[test]
     fn deserialize_ok() {
-        let mut ostream = File::open("resource/v1_three_points.3dm").unwrap();
+        let mut ostream = File::open("resource/v1/three_points.3dm").unwrap();
         assert!(Header::deserialize(&mut ostream).is_ok());
     }
 
