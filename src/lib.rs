@@ -8,6 +8,7 @@ pub mod chunk;
 pub mod comment;
 pub mod compressed_buffer;
 pub mod deserialize;
+pub mod error;
 pub mod header;
 pub mod notes;
 pub mod on_version;

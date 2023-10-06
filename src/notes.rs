@@ -5,6 +5,7 @@ use once_io::OStream;
 use crate::{
     chunk,
     deserialize::{Deserialize, FileVersion, V1, V2, V3, V4, V50, V60, V70},
+    error::ErrorStack,
 };
 
 #[derive(Default)]
@@ -103,7 +104,7 @@ impl From<v2::Notes> for Notes {
 }
 
 impl Deserialize<V1> for Notes {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -114,7 +115,7 @@ impl Deserialize<V1> for Notes {
 }
 
 impl Deserialize<V2> for Notes {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -125,7 +126,7 @@ impl Deserialize<V2> for Notes {
 }
 
 impl Deserialize<V3> for Notes {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -136,7 +137,7 @@ impl Deserialize<V3> for Notes {
 }
 
 impl Deserialize<V4> for Notes {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -147,7 +148,7 @@ impl Deserialize<V4> for Notes {
 }
 
 impl Deserialize<V50> for Notes {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -158,7 +159,7 @@ impl Deserialize<V50> for Notes {
 }
 
 impl Deserialize<V60> for Notes {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -169,7 +170,7 @@ impl Deserialize<V60> for Notes {
 }
 
 impl Deserialize<V70> for Notes {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where

@@ -3,6 +3,7 @@ use crate::{
     bitmap::{Bitmap, CompressedBitmap},
     chunk,
     deserialize::{Deserialize, FileVersion, V1, V2, V3, V4, V50, V60, V70},
+    error::ErrorStack,
     notes::Notes,
     on_version::OnVersion,
     revision_history::RevisionHistory,
@@ -108,7 +109,7 @@ impl From<v2::Properties> for Properties {
 }
 
 impl Deserialize<V1> for Properties {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -119,7 +120,7 @@ impl Deserialize<V1> for Properties {
 }
 
 impl Deserialize<V2> for Properties {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -130,7 +131,7 @@ impl Deserialize<V2> for Properties {
 }
 
 impl Deserialize<V3> for Properties {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -141,7 +142,7 @@ impl Deserialize<V3> for Properties {
 }
 
 impl Deserialize<V4> for Properties {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -152,7 +153,7 @@ impl Deserialize<V4> for Properties {
 }
 
 impl Deserialize<V50> for Properties {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -163,7 +164,7 @@ impl Deserialize<V50> for Properties {
 }
 
 impl Deserialize<V60> for Properties {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -174,7 +175,7 @@ impl Deserialize<V60> for Properties {
 }
 
 impl Deserialize<V70> for Properties {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where

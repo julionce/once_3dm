@@ -4,6 +4,7 @@ use std::io::Read;
 use crate::{
     chunk::Begin,
     deserialize::{Deserialize, FileVersion, V1},
+    error::{Error, ErrorKind, ErrorStack},
     typecode,
 };
 
@@ -19,7 +20,7 @@ impl<V> Deserialize<V> for Comment
 where
     V: FileVersion,
 {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -31,10 +32,12 @@ where
             let mut string = String::new();
             match chunk.read_to_string(&mut string) {
                 Ok(_) => Ok(Comment(string)),
-                Err(e) => Err(e.to_string()),
+                Err(e) => Err(ErrorStack::new(Error::IoError(e))),
             }
         } else {
-            Err("invalid typecode".to_string())
+            Err(ErrorStack::new(Error::Simple(
+                ErrorKind::InvalidChunkTypecode,
+            )))
         }
     }
 }

@@ -1,3 +1,4 @@
+use crate::error::{Error, ErrorKind, ErrorStack};
 use once_io::OStream;
 use std::io::Read;
 
@@ -30,7 +31,7 @@ where
     Self: Sized,
     V: FileVersion,
 {
-    type Error;
+    type Error: Into<ErrorStack>;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -43,7 +44,7 @@ macro_rules! impl_deserialize_for_num {
         where
             V: FileVersion,
         {
-            type Error = String;
+            type Error = ErrorStack;
 
             fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
             where
@@ -52,7 +53,7 @@ macro_rules! impl_deserialize_for_num {
                 let mut buf = [0u8; mem::size_of::<$type>()];
                 match ostream.read_exact(&mut buf) {
                     Ok(()) => Ok(<$type>::from_le_bytes(buf)),
-                    Err(e) => Err(e.to_string()),
+                    Err(e) => Err(ErrorStack::new(Error::IoError(e))),
                 }
             }
         }
@@ -75,7 +76,7 @@ impl_deserialize_for_num! {f32}
 impl_deserialize_for_num! {f64}
 
 impl Deserialize<V1> for String {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -88,16 +89,18 @@ impl Deserialize<V1> for String {
                 if size as u64 == length as u64 {
                     Ok(string)
                 } else {
-                    Err("Invalid length".to_string())
+                    Err(ErrorStack::new(Error::Simple(
+                        ErrorKind::InvalidStringLength,
+                    )))
                 }
             }
-            Err(e) => Err(e.to_string()),
+            Err(e) => Err(ErrorStack::new(Error::IoError(e))),
         }
     }
 }
 
 impl Deserialize<V2> for String {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -112,7 +115,7 @@ impl Deserialize<V2> for String {
             <u16 as Deserialize<V2>>::deserialize(ostream)?;
             match String::from_utf16(&buf) {
                 Ok(string) => Ok(string),
-                Err(e) => Err(e.to_string()),
+                Err(e) => Err(ErrorStack::new(Error::FromUtf16Error(e))),
             }
         } else {
             Ok(String::new())
@@ -121,7 +124,7 @@ impl Deserialize<V2> for String {
 }
 
 impl Deserialize<V3> for String {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -132,7 +135,7 @@ impl Deserialize<V3> for String {
 }
 
 impl Deserialize<V4> for String {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -143,7 +146,7 @@ impl Deserialize<V4> for String {
 }
 
 impl Deserialize<V50> for String {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -154,7 +157,7 @@ impl Deserialize<V50> for String {
 }
 
 impl Deserialize<V60> for String {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -165,7 +168,7 @@ impl Deserialize<V60> for String {
 }
 
 impl Deserialize<V70> for String {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -179,9 +182,9 @@ impl<V, T> Deserialize<V> for Vec<T>
 where
     V: FileVersion,
     T: Deserialize<V>,
-    String: From<<T as Deserialize<V>>::Error>,
+    ErrorStack: From<<T as Deserialize<V>>::Error>,
 {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<U>(ostream: &mut U) -> Result<Self, Self::Error>
     where
@@ -196,7 +199,7 @@ where
                 }
                 Ok(data)
             }
-            Err(e) => Err(e.to_string()),
+            Err(e) => Err(ErrorStack::new(Error::IoError(e))),
         }
     }
 }

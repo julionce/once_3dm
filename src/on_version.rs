@@ -2,7 +2,10 @@ use once_3dm_macros::Deserialize;
 
 use once_io::OStream;
 
-use crate::deserialize::{Deserialize, FileVersion};
+use crate::{
+    deserialize::{Deserialize, FileVersion},
+    error::ErrorStack,
+};
 
 #[derive(Default, Deserialize)]
 pub struct OnVersion {

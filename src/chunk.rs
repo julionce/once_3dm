@@ -1,4 +1,4 @@
-use crate::deserialize::FileVersion;
+use crate::{deserialize::FileVersion, error::ErrorStack};
 use once_3dm_macros::Deserialize;
 use once_io::OStream;
 
@@ -13,13 +13,19 @@ pub struct Begin {
 }
 
 impl Deserialize<V1> for Begin {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
         T: once_io::OStream,
     {
-        let typecode = <Typecode as Deserialize<V1>>::deserialize(ostream)?;
+        let typecode = match <Typecode as Deserialize<V1>>::deserialize(ostream) {
+            Ok(ok) => ok,
+            Err(mut stack) => {
+                stack.push_frame("typecode", "Typecode");
+                return Err(stack);
+            }
+        };
         let is_unsigned = 0 == (typecode::SHORT & typecode)
             || typecode::RGB == typecode
             || typecode::RGBDISPLAY == typecode
@@ -37,7 +43,7 @@ impl Deserialize<V1> for Begin {
 }
 
 impl Deserialize<V2> for Begin {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -67,7 +73,7 @@ impl Deserialize<V2> for Begin {
 }
 
 impl Deserialize<V3> for Begin {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -78,7 +84,7 @@ impl Deserialize<V3> for Begin {
 }
 
 impl Deserialize<V4> for Begin {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -89,7 +95,7 @@ impl Deserialize<V4> for Begin {
 }
 
 impl Deserialize<V50> for Begin {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -104,7 +110,7 @@ impl Deserialize<V50> for Begin {
 }
 
 impl Deserialize<V60> for Begin {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -115,7 +121,7 @@ impl Deserialize<V60> for Begin {
 }
 
 impl Deserialize<V70> for Begin {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where

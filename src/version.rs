@@ -1,8 +1,9 @@
-use std::fmt::Display;
-
 use once_io::OStream;
 
-use crate::deserialize::{Deserialize, FileVersion};
+use crate::{
+    deserialize::{Deserialize, FileVersion},
+    error::{Error, ErrorKind, ErrorStack},
+};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Version {
@@ -15,23 +16,8 @@ pub enum Version {
     V70,
 }
 
-#[derive(Debug, PartialEq)]
-pub enum VersionError {
-    InvalidVersion,
-    IoError(std::io::ErrorKind),
-}
-
-impl Display for VersionError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::InvalidVersion => write!(f, "invalid version"),
-            Self::IoError(kind) => write!(f, "{}", kind),
-        }
-    }
-}
-
 impl TryFrom<u8> for Version {
-    type Error = VersionError;
+    type Error = Error;
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
             1 => Ok(Version::V1),
@@ -41,7 +27,7 @@ impl TryFrom<u8> for Version {
             50 => Ok(Version::V50),
             60 => Ok(Version::V60),
             70 => Ok(Version::V70),
-            _ => Err(VersionError::InvalidVersion),
+            _ => Err(Error::Simple(ErrorKind::InvalidVersion)),
         }
     }
 }
@@ -64,7 +50,7 @@ impl<V> Deserialize<V> for Version
 where
     V: FileVersion,
 {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -78,16 +64,16 @@ where
                     .skip_while(|x| **x == ' ' as u8)
                     .try_fold(0u8, |acc, x| match (*x as char).to_digit(10) {
                         Some(d) => Ok(acc * 10u8 + (d as u8)),
-                        None => Err("invalid version".to_string()),
+                        None => Err(Error::Simple(ErrorKind::InvalidVersion)),
                     }) {
                     Ok(v) => match Version::try_from(v) {
                         Ok(version) => Ok(version),
-                        Err(e) => Err(e.to_string()),
+                        Err(e) => Err(ErrorStack::new(e)),
                     },
-                    Err(e) => Err(e.to_string()),
+                    Err(e) => Err(ErrorStack::new(e)),
                 }
             }
-            Err(e) => Err(e.to_string()),
+            Err(e) => Err(ErrorStack::new(Error::IoError(e))),
         }
     }
 }
@@ -125,8 +111,8 @@ mod tests {
         assert_eq!(Version::try_from(60u8).ok(), Some(Version::V60));
         assert_eq!(Version::try_from(70u8).ok(), Some(Version::V70));
         assert_eq!(
-            Version::try_from(0u8).err(),
-            Some(VersionError::InvalidVersion)
+            Version::try_from(0u8).err().unwrap().kind(),
+            ErrorKind::InvalidVersion
         );
     }
 

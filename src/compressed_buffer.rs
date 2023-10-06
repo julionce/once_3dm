@@ -1,6 +1,7 @@
 use crate::{
     chunk,
     deserialize::{Deserialize, FileVersion},
+    error::{Error, ErrorKind, ErrorStack},
     typecode,
 };
 
@@ -21,9 +22,9 @@ impl<V> Deserialize<V> for CompressedBuffer
 where
     V: FileVersion,
     chunk::Begin: Deserialize<V>,
-    String: From<<chunk::Begin as Deserialize<V>>::Error>,
+    ErrorStack: From<<chunk::Begin as Deserialize<V>>::Error>,
 {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -57,13 +58,19 @@ where
                                     inner: <Vec<u8> as Deserialize<V>>::deserialize(&mut chunk)?,
                                 })
                             }
-                            None => Err("invalid chunk size".to_string()),
+                            None => {
+                                Err(ErrorStack::new(Error::Simple(ErrorKind::InvalidChunkSize)))
+                            }
                         }
                     }
-                    _ => Err("invalid chunk typecode".to_string()),
+                    _ => Err(ErrorStack::new(Error::Simple(
+                        ErrorKind::InvalidChunkTypecode,
+                    ))),
                 }
             }
-            _ => Err("invalid compression mode".to_string()),
+            _ => Err(ErrorStack::new(Error::Simple(
+                ErrorKind::InvalidCompressionMode,
+            ))),
         }
     }
 }

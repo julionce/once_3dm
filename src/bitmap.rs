@@ -4,6 +4,7 @@ use crate::{
     chunk,
     compressed_buffer::CompressedBuffer,
     deserialize::{Deserialize, FileVersion},
+    error::{Error, ErrorKind, ErrorStack},
 };
 
 use once_io::OStream;
@@ -69,7 +70,7 @@ impl<V> Deserialize<V> for Bitmap
 where
     V: FileVersion,
 {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -102,9 +103,9 @@ impl<V> Deserialize<V> for CompressedBitmap
 where
     V: FileVersion,
     chunk::Begin: Deserialize<V>,
-    String: From<<chunk::Begin as Deserialize<V>>::Error>,
+    ErrorStack: From<<chunk::Begin as Deserialize<V>>::Error>,
 {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -129,10 +130,14 @@ where
             if buffer.size == image_limit {
                 Ok(Self { inner: bitmap })
             } else {
-                Err("buffer size mismatch".to_string())
+                Err(ErrorStack::new(Error::Simple(
+                    ErrorKind::BufferSizeMismatch,
+                )))
             }
         } else {
-            Err("buffer size mismatch".to_string())
+            Err(ErrorStack::new(Error::Simple(
+                ErrorKind::BufferSizeMismatch,
+            )))
         }
     }
 }

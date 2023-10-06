@@ -1,6 +1,7 @@
 use crate::{
     chunk,
     deserialize::{Deserialize, FileVersion, V2, V3, V4, V50, V60, V70},
+    error::ErrorStack,
 };
 use once_3dm_macros::Deserialize;
 use once_io::OStream;
@@ -65,7 +66,7 @@ impl From<v2::Application> for Application {
 }
 
 impl Deserialize<V2> for Application {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -76,7 +77,7 @@ impl Deserialize<V2> for Application {
 }
 
 impl Deserialize<V3> for Application {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -87,7 +88,7 @@ impl Deserialize<V3> for Application {
 }
 
 impl Deserialize<V4> for Application {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -98,7 +99,7 @@ impl Deserialize<V4> for Application {
 }
 
 impl Deserialize<V50> for Application {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -109,7 +110,7 @@ impl Deserialize<V50> for Application {
 }
 
 impl Deserialize<V60> for Application {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -120,7 +121,7 @@ impl Deserialize<V60> for Application {
 }
 
 impl Deserialize<V70> for Application {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where

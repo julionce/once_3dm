@@ -90,6 +90,7 @@
 use crate::{
     chunk,
     deserialize::{Deserialize, FileVersion, V1, V2, V3, V4, V50, V60, V70},
+    error::ErrorStack,
     header::Header,
     properties::Properties,
     typecode,
@@ -112,7 +113,7 @@ pub struct Archive {
 }
 
 impl Archive {
-    pub fn deserialize<T>(ostream: &mut T) -> Result<Self, String>
+    pub fn deserialize<T>(ostream: &mut T) -> Result<Self, ErrorStack>
     where
         T: OStream,
     {
@@ -147,11 +148,10 @@ mod tests {
                         let mut ostream =
                             File::open(dir_entry.path().display().to_string()).unwrap();
                         let archive = Archive::deserialize(&mut ostream);
-                        assert!(
-                            archive.is_ok(),
-                            "file: {}",
-                            dir_entry.path().display().to_string()
-                        );
+                        match archive {
+                            Ok(_) => assert!(true),
+                            Err(e) => assert!(false, "{}", e),
+                        }
                     }
                 }
                 _ => (),
@@ -239,11 +239,10 @@ mod tests {
                         let mut ostream =
                             File::open(dir_entry.path().display().to_string()).unwrap();
                         let archive = Archive::deserialize(&mut ostream);
-                        assert!(
-                            archive.is_ok(),
-                            "file: {}",
-                            dir_entry.path().display().to_string()
-                        );
+                        match archive {
+                            Ok(_) => assert!(true),
+                            Err(e) => assert!(false, "{}", e),
+                        }
                     }
                 }
                 _ => (),
@@ -262,11 +261,10 @@ mod tests {
                         let mut ostream =
                             File::open(dir_entry.path().display().to_string()).unwrap();
                         let archive = Archive::deserialize(&mut ostream);
-                        assert!(
-                            archive.is_ok(),
-                            "file: {}",
-                            dir_entry.path().display().to_string()
-                        );
+                        match archive {
+                            Ok(_) => assert!(true),
+                            Err(e) => assert!(false, "{}", e),
+                        }
                     }
                 }
                 _ => (),
@@ -285,11 +283,10 @@ mod tests {
                         let mut ostream =
                             File::open(dir_entry.path().display().to_string()).unwrap();
                         let archive = Archive::deserialize(&mut ostream);
-                        assert!(
-                            archive.is_ok(),
-                            "file: {}",
-                            dir_entry.path().display().to_string()
-                        );
+                        match archive {
+                            Ok(_) => assert!(true),
+                            Err(e) => assert!(false, "{}", e),
+                        }
                     }
                 }
                 _ => (),

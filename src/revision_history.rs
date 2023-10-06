@@ -1,6 +1,7 @@
 use crate::{
     chunk,
     deserialize::{Deserialize, FileVersion, V1, V2, V3, V4, V50, V60, V70},
+    error::ErrorStack,
     time::Time,
 };
 use once_3dm_macros::Deserialize;
@@ -102,7 +103,7 @@ impl From<v2::RevisionHistory> for RevisionHistory {
 }
 
 impl Deserialize<V1> for RevisionHistory {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -113,7 +114,7 @@ impl Deserialize<V1> for RevisionHistory {
 }
 
 impl Deserialize<V2> for RevisionHistory {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -124,7 +125,7 @@ impl Deserialize<V2> for RevisionHistory {
 }
 
 impl Deserialize<V3> for RevisionHistory {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -135,7 +136,7 @@ impl Deserialize<V3> for RevisionHistory {
 }
 
 impl Deserialize<V4> for RevisionHistory {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -146,7 +147,7 @@ impl Deserialize<V4> for RevisionHistory {
 }
 
 impl Deserialize<V50> for RevisionHistory {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -157,7 +158,7 @@ impl Deserialize<V50> for RevisionHistory {
 }
 
 impl Deserialize<V60> for RevisionHistory {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -168,7 +169,7 @@ impl Deserialize<V60> for RevisionHistory {
 }
 
 impl Deserialize<V70> for RevisionHistory {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where

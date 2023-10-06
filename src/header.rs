@@ -3,6 +3,7 @@ use once_io::OStream;
 use crate::{
     comment::Comment,
     deserialize::{Deserialize, V1, V2, V3, V4, V50, V60, V70},
+    error::{Error, ErrorKind, ErrorStack},
     start_section::StartSection,
     version::Version,
 };
@@ -17,7 +18,7 @@ impl Header {
 }
 
 impl Deserialize<V1> for Header {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
@@ -27,10 +28,10 @@ impl Deserialize<V1> for Header {
         match ostream.read_exact(&mut buf) {
             Ok(()) => {
                 if Header::BEGIN != buf {
-                    return Err("invalid header".to_string());
+                    return Err(ErrorStack::new(Error::Simple(ErrorKind::InvalidHeader)));
                 }
             }
-            Err(e) => return Err(e.to_string()),
+            Err(e) => return Err(ErrorStack::new(Error::IoError(e))),
         }
         let mut version = <Version as Deserialize<V1>>::deserialize(ostream)?;
         let start_section = match version {

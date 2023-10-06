@@ -1,6 +1,9 @@
 use std::marker::PhantomData;
 
-use crate::deserialize::{Deserialize, FileVersion};
+use crate::{
+    deserialize::{Deserialize, FileVersion},
+    error::ErrorStack,
+};
 
 pub struct Sequence<S, T> {
     pub inner: Vec<T>,
@@ -11,13 +14,13 @@ impl<V, S, T> Deserialize<V> for Sequence<S, T>
 where
     V: FileVersion,
     S: Deserialize<V>,
-    String: From<<S as Deserialize<V>>::Error>,
+    ErrorStack: From<<S as Deserialize<V>>::Error>,
     usize: TryFrom<S>,
-    String: From<<usize as TryFrom<S>>::Error>,
+    ErrorStack: From<<usize as TryFrom<S>>::Error>,
     T: Deserialize<V>,
-    String: From<<T as Deserialize<V>>::Error>,
+    ErrorStack: From<<T as Deserialize<V>>::Error>,
 {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<U>(ostream: &mut U) -> Result<Self, Self::Error>
     where

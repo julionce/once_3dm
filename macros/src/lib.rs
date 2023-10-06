@@ -186,7 +186,7 @@ fn generate_deserialize(
     quote! {
         #header
         {
-            type Error = String;
+            type Error = ErrorStack;
 
             fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
             where
@@ -218,18 +218,18 @@ fn generate_chunk_trait_bounds_deserialize(struct_attrs: &StructAttrs) -> TokenS
     let chunk_begin_trait_bounds = match struct_attrs.table.0 {
         true => quote! {
             chunk::Begin: Deserialize<V>,
-            String: From<<chunk::Begin as Deserialize<V>>::Error>,
+            ErrorStack: From<<chunk::Begin as Deserialize<V>>::Error>,
         },
         false => quote!(),
     };
     let chunk_version_trait_bounds = match struct_attrs.chunk_version {
         ChunkVersion::Big => quote! {
             chunk::BigVersion: Deserialize<V>,
-            String: From<<chunk::BigVersion as Deserialize<V>>::Error>,
+            ErrorStack: From<<chunk::BigVersion as Deserialize<V>>::Error>,
         },
         ChunkVersion::Short => quote! {
             chunk::ShortVersion: Deserialize<V>,
-            String: From<<chunk::ShortVersion as Deserialize<V>>::Error>,
+            ErrorStack: From<<chunk::ShortVersion as Deserialize<V>>::Error>,
         },
         ChunkVersion::None => quote! {},
     };
@@ -253,7 +253,7 @@ fn generate_type_trait_bounds_deserialize(fields: &syn::Fields) -> Vec<TokenStre
                 };
                 quote! {
                     #ty: Deserialize<V>,
-                    String: From<<#ty as Deserialize<V>>::Error>,
+                    ErrorStack: From<<#ty as Deserialize<V>>::Error>,
                 }
             })
             .collect::<Vec<TokenStream2>>(),

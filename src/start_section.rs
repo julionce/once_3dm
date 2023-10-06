@@ -5,6 +5,7 @@ use once_io::OStream;
 use crate::{
     chunk::Begin,
     deserialize::{Deserialize, V1},
+    error::ErrorStack,
     typecode::{self},
     version::Version,
 };
@@ -14,7 +15,7 @@ pub struct StartSection {
 }
 
 impl Deserialize<V1> for StartSection {
-    type Error = String;
+    type Error = ErrorStack;
 
     fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
     where
