@@ -81,11 +81,10 @@ mod tests {
                         let mut ostream =
                             File::open(dir_entry.path().display().to_string()).unwrap();
                         let archive = Archive::deserialize(&mut ostream);
-                        assert!(
-                            archive.is_ok(),
-                            "file: {}",
-                            dir_entry.path().display().to_string()
-                        );
+                        match archive {
+                            Ok(_) => assert!(true),
+                            Err(e) => assert!(false, "{}", e),
+                        }
                     }
                 }
                 _ => (),
@@ -104,11 +103,10 @@ mod tests {
                         let mut ostream =
                             File::open(dir_entry.path().display().to_string()).unwrap();
                         let archive = Archive::deserialize(&mut ostream);
-                        assert!(
-                            archive.is_ok(),
-                            "file: {}",
-                            dir_entry.path().display().to_string()
-                        );
+                        match archive {
+                            Ok(_) => assert!(true),
+                            Err(e) => assert!(false, "{}", e),
+                        }
                     }
                 }
                 _ => (),
@@ -127,11 +125,10 @@ mod tests {
                         let mut ostream =
                             File::open(dir_entry.path().display().to_string()).unwrap();
                         let archive = Archive::deserialize(&mut ostream);
-                        assert!(
-                            archive.is_ok(),
-                            "file: {}",
-                            dir_entry.path().display().to_string()
-                        );
+                        match archive {
+                            Ok(_) => assert!(true),
+                            Err(e) => assert!(false, "{}", e),
+                        }
                     }
                 }
                 _ => (),
