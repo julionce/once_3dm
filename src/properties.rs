@@ -3,7 +3,7 @@ use crate::{
     bitmap::{Bitmap, CompressedBitmap},
     chunk,
     deserialize::{Deserialize, FileVersion, V1, V2, V3, V4, V50, V60, V70},
-    error::ErrorStack,
+    error::{Error, ErrorKind, ErrorStack},
     notes::Notes,
     on_version::OnVersion,
     revision_history::RevisionHistory,
@@ -137,7 +137,7 @@ impl Deserialize<V3> for Properties {
     where
         T: once_io::OStream,
     {
-        Ok(<v3::Properties as Deserialize<V2>>::deserialize(ostream)?.into())
+        Ok(<v3::Properties as Deserialize<V3>>::deserialize(ostream)?.into())
     }
 }
 
@@ -148,7 +148,7 @@ impl Deserialize<V4> for Properties {
     where
         T: once_io::OStream,
     {
-        Ok(<v4::Properties as Deserialize<V2>>::deserialize(ostream)?.into())
+        Ok(<v4::Properties as Deserialize<V4>>::deserialize(ostream)?.into())
     }
 }
 
@@ -159,7 +159,7 @@ impl Deserialize<V50> for Properties {
     where
         T: once_io::OStream,
     {
-        Ok(<v50::Properties as Deserialize<V2>>::deserialize(ostream)?.into())
+        Ok(<v50::Properties as Deserialize<V50>>::deserialize(ostream)?.into())
     }
 }
 
@@ -170,7 +170,7 @@ impl Deserialize<V60> for Properties {
     where
         T: once_io::OStream,
     {
-        Ok(<v60::Properties as Deserialize<V2>>::deserialize(ostream)?.into())
+        Ok(<v60::Properties as Deserialize<V60>>::deserialize(ostream)?.into())
     }
 }
 
@@ -181,6 +181,6 @@ impl Deserialize<V70> for Properties {
     where
         T: once_io::OStream,
     {
-        Ok(<v70::Properties as Deserialize<V2>>::deserialize(ostream)?.into())
+        Ok(<v70::Properties as Deserialize<V70>>::deserialize(ostream)?.into())
     }
 }
