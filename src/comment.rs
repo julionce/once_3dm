@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::{
     chunk::Begin,
-    deserialize::{Deserialize, FileVersion, V1},
+    deserialize::{Deserialize, FileVersion},
     error::{Error, ErrorKind, ErrorStack},
     typecode,
 };
@@ -19,6 +19,8 @@ impl From<Comment> for String {
 impl<V> Deserialize<V> for Comment
 where
     V: FileVersion,
+    Begin: Deserialize<V>,
+    ErrorStack: From<<Begin as Deserialize<V>>::Error>,
 {
     type Error = ErrorStack;
 
@@ -26,7 +28,7 @@ where
     where
         T: OStream,
     {
-        let begin = <Begin as Deserialize<V1>>::deserialize(ostream)?;
+        let begin = <Begin as Deserialize<V>>::deserialize(ostream)?;
         if typecode::COMMENTBLOCK == begin.typecode {
             let mut chunk = ostream.ochunk(Some(begin.length));
             let mut string = String::new();
