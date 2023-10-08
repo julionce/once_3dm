@@ -1,7 +1,7 @@
 use crate::{
     chunk,
     deserialize::{Deserialize, FileVersion, V1, V2, V3, V4, V50, V60, V70},
-    error::ErrorStack,
+    error::{Error, ErrorKind, ErrorStack},
     header::Header,
     properties::Properties,
     typecode,
@@ -29,14 +29,21 @@ impl Archive {
         T: OStream,
     {
         let header = Header::deserialize(ostream)?;
-        let body = match header.version {
-            Version::V1 => <Body as Deserialize<V1>>::deserialize(ostream)?,
-            Version::V2 => <Body as Deserialize<V2>>::deserialize(ostream)?,
-            Version::V3 => <Body as Deserialize<V3>>::deserialize(ostream)?,
-            Version::V4 => <Body as Deserialize<V4>>::deserialize(ostream)?,
-            Version::V50 => <Body as Deserialize<V50>>::deserialize(ostream)?,
-            Version::V60 => <Body as Deserialize<V60>>::deserialize(ostream)?,
-            Version::V70 => <Body as Deserialize<V70>>::deserialize(ostream)?,
+        let body = match match header.version {
+            Version::V1 => <Body as Deserialize<V1>>::deserialize(ostream),
+            Version::V2 => <Body as Deserialize<V2>>::deserialize(ostream),
+            Version::V3 => <Body as Deserialize<V3>>::deserialize(ostream),
+            Version::V4 => <Body as Deserialize<V4>>::deserialize(ostream),
+            Version::V50 => <Body as Deserialize<V50>>::deserialize(ostream),
+            Version::V60 => <Body as Deserialize<V60>>::deserialize(ostream),
+            Version::V70 => <Body as Deserialize<V70>>::deserialize(ostream),
+        } {
+            Ok(ok) => ok,
+            Err(e) => {
+                let mut stack = ErrorStack::from(e);
+                stack.push_frame("body", "Body");
+                return Err(stack);
+            }
         };
         Ok(Self { header, body })
     }
