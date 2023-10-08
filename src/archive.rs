@@ -1,22 +1,11 @@
 use crate::{
-    chunk,
-    deserialize::{Deserialize, FileVersion, V1, V2, V3, V4, V50, V60, V70},
-    error::{Error, ErrorKind, ErrorStack},
+    body::Body,
+    deserialize::{Deserialize, V1, V2, V3, V4, V50, V60, V70},
+    error::ErrorStack,
     header::Header,
-    properties::Properties,
-    typecode,
     version::Version,
 };
-use once_3dm_macros::Deserialize;
 use once_io::OStream;
-use std::io::{Seek, SeekFrom};
-
-#[derive(Default, Deserialize)]
-#[table]
-pub struct Body {
-    #[field(PROPERTIES_TABLE)]
-    pub properties: Properties,
-}
 
 pub struct Archive {
     pub header: Header,

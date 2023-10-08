@@ -4,6 +4,7 @@
 pub mod application;
 pub mod archive;
 pub mod bitmap;
+pub mod body;
 pub mod chunk;
 pub mod comment;
 pub mod compressed_buffer;
