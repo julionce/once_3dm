@@ -294,18 +294,27 @@ fn generate_body_core_deserialize(
             quote! {
                 let mut table = Self::default();
                 loop {
-                    let begin = <chunk::Begin as Deserialize<V>>::deserialize(ostream)?;
+                    let begin = match <chunk::Begin as Deserialize<V>>::deserialize(ostream) {
+                        Ok(ok) => ok,
+                        Err(e) => {
+                            let mut stack: ErrorStack = From::from(e);
+                            stack.push_frame("begin", "chunk::Begin");
+                            return Err(stack);
+                        }
+                    };
                     let mut chunk = ostream.ochunk(Some(begin.length));
                     match begin.typecode {
                         #(#field_deserializes)*
                         typecode::ENDOFTABLE | typecode::ENDOFFILE => {
+                            //TODO: remove unwrap
                             chunk.seek(SeekFrom::End(0)).unwrap();
                             break;
                         }
                         _ => {
+                            //TODO: remove unwrap
+                            chunk.seek(SeekFrom::End(0)).unwrap();
                         }
                     }
-                    chunk.seek(SeekFrom::End(0)).unwrap();
                 }
                 Ok(table)
             }
@@ -359,26 +368,78 @@ fn generate_field_deserializes(
                     }
                     _ => panic!(),
                 };
+                let ident_str = ident.to_string();
+                let ty_str = ty.to_string();
                 let attrs = FieldAttrs::parse(raw_field);
                 let padding_deserialize = generate_padding_deserialize(&attrs, struct_attrs);
                 match struct_attrs.table.0 {
                     true => {
                         let deserialize = match attrs.underlying_type {
-                            Some(underlying_ty) => quote!(<#underlying_ty as Deserialize<V>>::deserialize(&mut chunk)?.into()),
-                            None => quote!(<#ty as Deserialize<V>>::deserialize(&mut chunk)?),
+                            Some(underlying_ty) => quote! {
+                                match <#underlying_ty as Deserialize<V>>::deserialize(&mut chunk) {
+                                    Ok(ok) => ok.into(),
+                                    Err(mut e) => {
+                                        let mut stack: ErrorStack = From::from(e);
+                                        stack.push_frame(#ident_str, #ty_str);
+                                        return Err(stack);
+                                    }
+                                }
+                            },
+                            None => quote! {
+                                match <#ty as Deserialize<V>>::deserialize(&mut chunk) {
+                                    Ok(ok) => ok,
+                                    Err(mut e) => {
+                                        let mut stack: ErrorStack = From::from(e);
+                                        stack.push_frame(#ident_str, #ty_str);
+                                        return Err(stack);
+                                    }
+                                }
+                            },
                         };
                         let typecode = attrs.typecode.as_ref().unwrap();
                         quote!(
                             typecode::#typecode => {
                                 #padding_deserialize
                                 table.#ident = #deserialize;
+                                match chunk.seek(SeekFrom::End(0)) {
+                                    Ok(v) => {
+                                        if v != begin.length {
+                                            let mut stack = ErrorStack::new(Error::Simple(ErrorKind::InvalidChunkSize));
+                                            stack.push_frame(#ident_str, #ty_str);
+                                            return Err(stack);
+                                        }
+                                    },
+                                    Err(e) => {
+                                        let mut stack = ErrorStack::new(Error::IoError(e));
+                                        stack.push_frame(#ident_str, #ty_str);
+                                        return Err(stack);
+                                    }
+                                };
                             }
                         )
                     }
                     false => {
                         let deserialize = match attrs.underlying_type {
-                            Some(underlying_ty) => quote!(<#underlying_ty as Deserialize<V>>::deserialize(ostream)?.into()),
-                            None => quote!(<#ty as Deserialize<V>>::deserialize(ostream)?),
+                            Some(underlying_ty) => quote! {
+                                match <#underlying_ty as Deserialize<V>>::deserialize(ostream) {
+                                    Ok(ok) => ok.into(),
+                                    Err(e) => {
+                                        let mut stack: ErrorStack = From::from(e);
+                                        stack.push_frame(#ident_str, #ty_str);
+                                        return Err(stack);
+                                    }
+                                }
+                            },
+                            None => quote! {
+                                match <#ty as Deserialize<V>>::deserialize(ostream) {
+                                    Ok(ok) => ok,
+                                    Err(e) => {
+                                        let mut stack: ErrorStack = From::from(e);
+                                        stack.push_frame(#ident_str, #ty_str);
+                                        return Err(stack);
+                                    }
+                                }
+                            },
                         };
                         quote!(#ident: { #padding_deserialize #deserialize })
                     }
