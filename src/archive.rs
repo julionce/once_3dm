@@ -189,7 +189,7 @@ mod tests {
 
     #[test]
     fn deserialize_v70_ok() {
-        let paths = read_dir("resource/v60").unwrap();
+        let paths = read_dir("resource/v70").unwrap();
         for path in paths {
             let dir_entry = path.as_ref().unwrap();
             match path.as_ref().unwrap().path().extension() {
