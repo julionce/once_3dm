@@ -42,6 +42,7 @@ impl Deserialize<V1> for Begin {
     }
 }
 
+//TODO: check is_long and length.
 impl Deserialize<V2> for Begin {
     type Error = ErrorStack;
 
@@ -94,6 +95,7 @@ impl Deserialize<V4> for Begin {
     }
 }
 
+//TODO: check is_long and length.
 impl Deserialize<V50> for Begin {
     type Error = ErrorStack;
 
@@ -102,10 +104,17 @@ impl Deserialize<V50> for Begin {
         T: once_io::OStream,
     {
         let typecode = <Typecode as Deserialize<V50>>::deserialize(ostream)?;
-        let value = <i64 as Deserialize<V50>>::deserialize(ostream)?;
-        let is_long = (0 == typecode & typecode::SHORT) && (0 < value);
-        let length = if is_long { value as u64 } else { 0u64 };
-        Ok(Begin { typecode, length })
+        if typecode::PROPERTIES_OPENNURBS_VERSION == typecode {
+            Ok(Begin {
+                typecode,
+                length: 8u64,
+            })
+        } else {
+            let value = <u64 as Deserialize<V50>>::deserialize(ostream)?;
+            let is_long = (0 == typecode & typecode::SHORT) && (0 < value);
+            let length = if is_long { value as u64 } else { 0u64 };
+            Ok(Begin { typecode, length })
+        }
     }
 }
 
