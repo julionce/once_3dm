@@ -25,6 +25,7 @@ mod v1 {
     pub struct Notes {
         pub visible: i32,
         pub window_left: i32,
+        pub window_top: i32,
         pub window_right: i32,
         pub window_botton: i32,
         pub data: String,
