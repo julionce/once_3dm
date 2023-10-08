@@ -26,11 +26,97 @@ pub struct Properties {
 mod v1 {
     use super::*;
 
-    #[derive(Default, Deserialize)]
-    #[table]
+    #[derive(Default)]
     pub struct Properties {
-        #[field(NOTES)]
-        pub notes: Notes,
+        pub revision_history: Option<RevisionHistory>,
+        pub notes: Option<Notes>,
+        pub preview: Option<Bitmap>,
+    }
+
+    impl<V> Deserialize<V> for Properties
+    where
+        V: FileVersion,
+        chunk::Begin: Deserialize<V>,
+        ErrorStack: From<<chunk::Begin as Deserialize<V>>::Error>,
+        RevisionHistory: Deserialize<V>,
+        ErrorStack: From<<RevisionHistory as Deserialize<V>>::Error>,
+        Notes: Deserialize<V>,
+        ErrorStack: From<<Notes as Deserialize<V>>::Error>,
+        Bitmap: Deserialize<V>,
+        ErrorStack: From<<Bitmap as Deserialize<V>>::Error>,
+    {
+        type Error = ErrorStack;
+
+        fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+        where
+            T: OStream,
+        {
+            let mut properties = Properties::default();
+
+            loop {
+                let begin = match <chunk::Begin as Deserialize<V>>::deserialize(ostream) {
+                    Ok(ok) => ok,
+                    Err(e) => {
+                        let mut stack: ErrorStack = From::from(e);
+                        stack.push_frame("begin", "chunk::Begin");
+                        return Err(stack);
+                    }
+                };
+                let mut chunk = ostream.ochunk(Some(begin.length));
+                match begin.typecode {
+                    typecode::SUMMARY => {
+                        properties.revision_history =
+                            match <RevisionHistory as Deserialize<V>>::deserialize(&mut chunk) {
+                                Ok(ok) => Some(ok),
+                                Err(e) => {
+                                    let mut stack = ErrorStack::from(e);
+                                    stack.push_frame("revision_history", "RevisionHistory");
+                                    return Err(stack);
+                                }
+                            };
+                        chunk.seek(SeekFrom::End(0)).unwrap();
+                    }
+                    typecode::NOTES => {
+                        properties.notes = match <Notes as Deserialize<V>>::deserialize(&mut chunk)
+                        {
+                            Ok(ok) => Some(ok),
+                            Err(e) => {
+                                let mut stack = ErrorStack::from(e);
+                                stack.push_frame("notes", "Notes");
+                                return Err(stack);
+                            }
+                        };
+                        chunk.seek(SeekFrom::End(0)).unwrap();
+                    }
+                    typecode::BITMAPPREVIEW => {
+                        properties.preview =
+                            match <Bitmap as Deserialize<V>>::deserialize(&mut chunk) {
+                                Ok(ok) => Some(ok),
+                                Err(e) => {
+                                    let mut stack = ErrorStack::from(e);
+                                    stack.push_frame("preview", "Bitmap");
+                                    return Err(stack);
+                                }
+                            };
+                        chunk.seek(SeekFrom::End(0)).unwrap();
+                    }
+                    typecode::CURRENTLAYER | typecode::LAYER => {
+                        chunk.seek(SeekFrom::End(0)).unwrap();
+                        break;
+                    }
+                    _ => {
+                        chunk.seek(SeekFrom::End(0)).unwrap();
+                    }
+                }
+                if properties.notes.is_some()
+                    && properties.revision_history.is_some()
+                    && properties.preview.is_none()
+                {
+                    break;
+                }
+            }
+            Ok(properties)
+        }
     }
 }
 
@@ -90,8 +176,21 @@ mod v70 {
 }
 
 impl From<v1::Properties> for Properties {
-    fn from(_value: v1::Properties) -> Self {
-        Self::default()
+    fn from(value: v1::Properties) -> Self {
+        let mut properties = Self::default();
+        match value.revision_history {
+            Some(r) => properties.revision_history = r,
+            _ => (),
+        };
+        match value.notes {
+            Some(n) => properties.notes = n,
+            _ => (),
+        };
+        match value.preview {
+            Some(p) => properties.preview_image = p,
+            _ => (),
+        };
+        properties
     }
 }
 
