@@ -245,11 +245,15 @@ fn generate_type_trait_bounds_deserialize(fields: &syn::Fields) -> Vec<TokenStre
             .named
             .iter()
             .map(|raw_field| {
-                let ty = match &raw_field.ty {
-                    syn::Type::Path(value) => {
-                        quote!(#value)
-                    }
-                    _ => panic!(),
+                let attrs = FieldAttrs::parse(raw_field);
+                let ty = match attrs.underlying_type {
+                    Some(underlying_ty) => quote!(#underlying_ty),
+                    None => match &raw_field.ty {
+                        syn::Type::Path(value) => {
+                            quote!(#value)
+                        }
+                        _ => panic!(),
+                    },
                 };
                 quote! {
                     #ty: Deserialize<V>,
