@@ -1,7 +1,5 @@
 use once_3dm_macros::Deserialize;
 
-use once_io::OStream;
-
 use crate::{
     deserialize::{Deserialize, FileVersion},
     error::ErrorStack,

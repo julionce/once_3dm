@@ -5,7 +5,6 @@ use crate::{
     time::Time,
 };
 use once_3dm_macros::Deserialize;
-use once_io::OStream;
 
 #[derive(Default)]
 pub struct RevisionHistory {

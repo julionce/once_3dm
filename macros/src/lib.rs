@@ -190,7 +190,7 @@ fn generate_deserialize(
 
             fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
             where
-                T: OStream
+                T: once_io::OStream
             {
                 #body
             }

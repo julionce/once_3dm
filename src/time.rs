@@ -3,7 +3,6 @@ use crate::{
     error::ErrorStack,
 };
 use once_3dm_macros::Deserialize;
-use once_io::OStream;
 
 #[derive(Default, Deserialize)]
 pub struct Time {
