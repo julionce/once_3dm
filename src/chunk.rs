@@ -1,8 +1,8 @@
-use crate::{deserialize::FileVersion, error::ErrorStack};
 use once_3dm_macros::Deserialize;
 
 use crate::{
-    deserialize::{Deserialize, V1, V2, V3, V4, V50, V60, V70},
+    deserialize::{Deserialize, FileVersion, V1, V2, V3, V4, V50, V60, V70},
+    error::{Error, ErrorKind, ErrorStack},
     typecode::{self, Typecode},
 };
 
@@ -139,10 +139,44 @@ impl Deserialize<V70> for Begin {
     }
 }
 
-#[derive(Default, Deserialize)]
+#[derive(Default)]
 pub struct BigVersion {
-    pub major: i32,
-    pub minor: i32,
+    pub major: u8,
+    pub minor: u8,
+}
+
+impl<V> Deserialize<V> for BigVersion
+where
+    V: FileVersion,
+{
+    type Error = ErrorStack;
+
+    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    where
+        T: once_io::OStream,
+    {
+        let major = <u32 as Deserialize<V>>::deserialize(ostream)?;
+        let minor = <u32 as Deserialize<V>>::deserialize(ostream)?;
+        match (
+            TryInto::<u8>::try_into(major),
+            TryInto::<u8>::try_into(minor),
+        ) {
+            (Ok(major), Ok(minor)) => Ok(Self { major, minor }),
+            _ => Err(ErrorStack::new(Error::Simple(
+                ErrorKind::InvalidChunkVersion,
+            ))),
+        }
+    }
+}
+
+impl BigVersion {
+    pub fn major(&self) -> u8 {
+        self.major
+    }
+
+    pub fn minor(&self) -> u8 {
+        self.minor
+    }
 }
 
 #[derive(Default, Deserialize)]
