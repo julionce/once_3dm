@@ -7,6 +7,7 @@ struct StructAttrs {
     table: TableAttr,
     chunk_version: ChunkVersion,
     from_chunk_version: Option<FromChunkVersion>,
+    on_chunk_version: OnChunkVersion,
 }
 
 impl StructAttrs {
@@ -15,6 +16,7 @@ impl StructAttrs {
             table: TableAttr::parse(attrs),
             chunk_version: ChunkVersion::parse(attrs),
             from_chunk_version: FromChunkVersion::parse(attrs),
+            on_chunk_version: OnChunkVersion::parse(attrs),
         }
     }
 }
@@ -46,6 +48,105 @@ impl ChunkVersion {
                 _ => panic!(),
             },
             None => Self::None,
+        }
+    }
+}
+
+enum ChunkVersionCmp {
+    Eq(u8),
+    Ne(u8),
+    Lt(u8),
+    Le(u8),
+    Gt(u8),
+    Ge(u8),
+}
+
+impl ChunkVersionCmp {
+    fn parse(attr: &syn::Attribute) -> Option<Self> {
+        match attr.parse_args::<syn::ExprCall>() {
+            Ok(call) => {
+                let number = match call.args.len() == 1 {
+                    true => match call.args.first().unwrap() {
+                        syn::Expr::Lit(lit) => match &lit.lit {
+                            syn::Lit::Int(int) => int.base10_parse::<u8>().unwrap(),
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    },
+                    false => panic!(),
+                };
+                match call.func.as_ref() {
+                    syn::Expr::Path(path) => {
+                        match path.path.get_ident().unwrap().to_string().as_str() {
+                            "Eq" => Some(ChunkVersionCmp::Eq(number)),
+                            "Ne" => Some(ChunkVersionCmp::Ne(number)),
+                            "Lt" => Some(ChunkVersionCmp::Lt(number)),
+                            "Le" => Some(ChunkVersionCmp::Le(number)),
+                            "Gt" => Some(ChunkVersionCmp::Gt(number)),
+                            "Ge" => Some(ChunkVersionCmp::Ge(number)),
+                            _ => panic!(),
+                        }
+                    }
+                    _ => panic!(),
+                }
+            }
+            Err(_) => panic!(),
+        }
+    }
+}
+
+fn generate_chunk_version_cmp(cmp: &ChunkVersionCmp) -> TokenStream2 {
+    use ChunkVersionCmp::*;
+    match cmp {
+        Eq(v) => quote!( == #v),
+        Ne(v) => quote!( != #v),
+        Lt(v) => quote!( <  #v),
+        Le(v) => quote!( <= #v),
+        Gt(v) => quote!( > #v),
+        Ge(v) => quote!( >= #v),
+    }
+}
+
+struct OnChunkVersion {
+    major: Option<ChunkVersionCmp>,
+    minor: Option<ChunkVersionCmp>,
+}
+
+impl OnChunkVersion {
+    fn parse(attrs: &Vec<syn::Attribute>) -> Self {
+        let major = match attrs
+            .iter()
+            .find(|attr| attr.path.is_ident("on_chunk_major_version"))
+        {
+            Some(attr) => ChunkVersionCmp::parse(attr),
+            None => None,
+        };
+        let minor = match attrs
+            .iter()
+            .find(|attr| attr.path.is_ident("on_chunk_minor_version"))
+        {
+            Some(attr) => ChunkVersionCmp::parse(attr),
+            None => None,
+        };
+        Self { major, minor }
+    }
+}
+
+fn generate_on_chunk_version_condition(on_chunk_version: &OnChunkVersion) -> TokenStream2 {
+    match (&on_chunk_version.major, &on_chunk_version.minor) {
+        (None, None) => quote!(true),
+        (Some(major), None) => {
+            let major_cmp = generate_chunk_version_cmp(major);
+            quote!( version.major() # major_cmp )
+        }
+        (None, Some(minor)) => {
+            let minor_cmp = generate_chunk_version_cmp(minor);
+            quote!( version.minor() # minor_cmp )
+        }
+        (Some(major), Some(minor)) => {
+            let major_cmp = generate_chunk_version_cmp(major);
+            let minor_cmp = generate_chunk_version_cmp(minor);
+            quote!( version.major() #major_cmp && version.minor() #minor_cmp )
         }
     }
 }
@@ -107,6 +208,7 @@ struct FieldAttrs {
     typecode: Option<syn::Type>,
     padding: Option<syn::Type>,
     underlying_type: Option<syn::Type>,
+    on_chunk_version: OnChunkVersion,
 }
 
 impl FieldAttrs {
@@ -115,6 +217,7 @@ impl FieldAttrs {
             typecode: Self::parse_typecode(&field.attrs),
             padding: Self::parse_padding(&field.attrs),
             underlying_type: Self::parse_underlying_type(&field.attrs),
+            on_chunk_version: OnChunkVersion::parse(&field.attrs),
         }
     }
 
@@ -150,6 +253,8 @@ impl FieldAttrs {
         field,
         chunk_version,
         from_chunk_version,
+        on_chunk_major_version,
+        on_chunk_minor_version,
         padding,
         underlying_type
     )
@@ -266,25 +371,16 @@ fn generate_type_trait_bounds_deserialize(fields: &syn::Fields) -> Vec<TokenStre
 }
 
 fn generate_body_deserialize(data: &syn::DataStruct, struct_attrs: &StructAttrs) -> TokenStream2 {
-    let version_deserialize = generate_version_deserialize(struct_attrs);
+    let version_deserialize = generate_version_deserialize(&struct_attrs.chunk_version);
     let body_core = generate_body_core_deserialize(data, struct_attrs);
-    match &struct_attrs.from_chunk_version {
-        Some(version) => {
-            let major_version = version.major;
-            let minor_version = version.minor;
-            quote! {
-                #version_deserialize
-                if version.major() >= #major_version && version.minor() >= #minor_version {
-                    #body_core
-                } else {
-                    Ok(Self::default())
-                }
-            }
-        }
-        None => quote! {
-            #version_deserialize
+    let condition = generate_on_chunk_version_condition(&struct_attrs.on_chunk_version);
+    quote! {
+        #version_deserialize
+        if #condition {
             #body_core
-        },
+        } else {
+            Ok(Self::default())
+        }
     }
 }
 
@@ -331,8 +427,8 @@ fn generate_body_core_deserialize(
     }
 }
 
-fn generate_version_deserialize(struct_attrs: &StructAttrs) -> TokenStream2 {
-    match struct_attrs.chunk_version {
+fn generate_version_deserialize(chunk_version: &ChunkVersion) -> TokenStream2 {
+    match chunk_version {
         ChunkVersion::Big => {
             quote!(let version = <chunk::BigVersion as Deserialize<V>>::deserialize(ostream)?;)
         }
@@ -376,6 +472,7 @@ fn generate_field_deserializes(
                 let ty_str = ty.to_string();
                 let attrs = FieldAttrs::parse(raw_field);
                 let padding_deserialize = generate_padding_deserialize(&attrs, struct_attrs);
+                let on_chunk_version_conditions = generate_on_chunk_version_condition(&attrs.on_chunk_version);
                 match struct_attrs.table.0 {
                     true => {
                         let deserialize = match attrs.underlying_type {
@@ -403,22 +500,24 @@ fn generate_field_deserializes(
                         let typecode = attrs.typecode.as_ref().unwrap();
                         quote!(
                             typecode::#typecode => {
-                                #padding_deserialize
-                                table.#ident = #deserialize;
-                                match chunk.seek(SeekFrom::End(0)) {
-                                    Ok(v) => {
-                                        if v != begin.length {
-                                            let mut stack = ErrorStack::new(Error::Simple(ErrorKind::InvalidChunkSize));
+                                if #on_chunk_version_conditions {
+                                    #padding_deserialize
+                                    table.#ident = #deserialize;
+                                    match chunk.seek(SeekFrom::End(0)) {
+                                        Ok(v) => {
+                                            if v != begin.length {
+                                                let mut stack = ErrorStack::new(Error::Simple(ErrorKind::InvalidChunkSize));
+                                                stack.push_frame(#ident_str, #ty_str);
+                                                return Err(stack);
+                                            }
+                                        },
+                                        Err(e) => {
+                                            let mut stack = ErrorStack::new(Error::IoError(e));
                                             stack.push_frame(#ident_str, #ty_str);
                                             return Err(stack);
                                         }
-                                    },
-                                    Err(e) => {
-                                        let mut stack = ErrorStack::new(Error::IoError(e));
-                                        stack.push_frame(#ident_str, #ty_str);
-                                        return Err(stack);
-                                    }
-                                };
+                                    };
+                                }
                             }
                         )
                     }
@@ -445,7 +544,16 @@ fn generate_field_deserializes(
                                 }
                             },
                         };
-                        quote!(#ident: { #padding_deserialize #deserialize })
+                        quote! {
+                            #ident: {
+                                if #on_chunk_version_conditions {
+                                    #padding_deserialize
+                                    #deserialize
+                                } else {
+                                    #ty::default()
+                                }
+                            }
+                        }
                     }
                 }
             })

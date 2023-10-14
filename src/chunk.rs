@@ -139,13 +139,13 @@ impl Deserialize<V70> for Begin {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Default, Deserialize)]
 pub struct BigVersion {
     pub major: i32,
     pub minor: i32,
 }
 
-#[derive(Deserialize)]
+#[derive(Default, Deserialize)]
 pub struct ShortVersion {
     inner: u8,
 }
