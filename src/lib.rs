@@ -21,4 +21,5 @@ pub mod start_section;
 pub mod time;
 pub mod typecode;
 pub mod units_and_tolerances;
+pub mod uuid;
 pub mod version;
