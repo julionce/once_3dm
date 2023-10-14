@@ -6,7 +6,6 @@ use syn::{parse_macro_input, Data, DeriveInput, Fields};
 struct StructAttrs {
     table: TableAttr,
     chunk_version: ChunkVersion,
-    from_chunk_version: Option<FromChunkVersion>,
     on_chunk_version: OnChunkVersion,
 }
 
@@ -15,7 +14,6 @@ impl StructAttrs {
         Self {
             table: TableAttr::parse(attrs),
             chunk_version: ChunkVersion::parse(attrs),
-            from_chunk_version: FromChunkVersion::parse(attrs),
             on_chunk_version: OnChunkVersion::parse(attrs),
         }
     }
@@ -147,46 +145,6 @@ fn generate_on_chunk_version_condition(on_chunk_version: &OnChunkVersion) -> Tok
             let major_cmp = generate_chunk_version_cmp(major);
             let minor_cmp = generate_chunk_version_cmp(minor);
             quote!( version.major() #major_cmp && version.minor() #minor_cmp )
-        }
-    }
-}
-
-struct FromChunkVersion {
-    major: u8,
-    minor: u8,
-}
-
-impl FromChunkVersion {
-    fn parse(attrs: &Vec<syn::Attribute>) -> Option<Self> {
-        match attrs
-            .iter()
-            .find(|attr| attr.path.is_ident("from_chunk_version"))
-        {
-            Some(attr) => match attr.parse_args::<syn::ExprTuple>() {
-                Ok(tuple) => {
-                    if tuple.elems.len() == 2 {
-                        let version = tuple
-                            .elems
-                            .iter()
-                            .map(|expr| match expr {
-                                syn::Expr::Lit(lit) => match &lit.lit {
-                                    syn::Lit::Int(int) => int.base10_parse::<u8>().unwrap(),
-                                    _ => panic!(),
-                                },
-                                _ => panic!(),
-                            })
-                            .collect::<Vec<u8>>();
-                        Some(Self {
-                            major: version[0],
-                            minor: version[1],
-                        })
-                    } else {
-                        panic!()
-                    }
-                }
-                _ => panic!(),
-            },
-            None => None,
         }
     }
 }
