@@ -204,6 +204,26 @@ where
     }
 }
 
+impl<V, T, const N: usize> Deserialize<V> for [T; N]
+where
+    V: FileVersion,
+    T: Deserialize<V> + Default + Copy,
+    ErrorStack: From<<T as Deserialize<V>>::Error>,
+{
+    type Error = ErrorStack;
+
+    fn deserialize<U>(ostream: &mut U) -> Result<Self, Self::Error>
+    where
+        U: OStream,
+    {
+        let mut ret = [T::default(); N];
+        for elem in ret.iter_mut() {
+            *elem = <T as Deserialize<V>>::deserialize(ostream)?;
+        }
+        Ok(ret)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::io::Cursor;
