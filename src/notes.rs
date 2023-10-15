@@ -35,7 +35,7 @@ mod v2 {
 
     #[derive(Default, Deserialize)]
     #[with_version(short)]
-    #[on_chunk_major_version(Eq(1))]
+    #[if_major_version(Eq(1))]
     pub struct Notes {
         pub html_encoded: i32,
         pub data: String,

@@ -37,7 +37,7 @@ mod v2 {
 
     #[derive(Default, Deserialize)]
     #[with_version(short)]
-    #[on_chunk_major_version(Eq(1))]
+    #[if_major_version(Eq(1))]
     pub struct RevisionHistory {
         pub created_by: String,
         pub create_time: Time,

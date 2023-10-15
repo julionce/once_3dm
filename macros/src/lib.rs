@@ -6,7 +6,7 @@ use syn::{parse_macro_input, Data, DeriveInput, Fields};
 struct StructAttrs {
     table: TableAttr,
     with_version: WithVersion,
-    on_chunk_version: OnChunkVersion,
+    if_version: IfVersion,
 }
 
 impl StructAttrs {
@@ -14,7 +14,7 @@ impl StructAttrs {
         Self {
             table: TableAttr::parse(attrs),
             with_version: WithVersion::parse(attrs),
-            on_chunk_version: OnChunkVersion::parse(attrs),
+            if_version: IfVersion::parse(attrs),
         }
     }
 }
@@ -47,7 +47,7 @@ impl WithVersion {
     }
 }
 
-enum ChunkVersionCmp {
+enum VersionCmp {
     Eq(u8),
     Ne(u8),
     Lt(u8),
@@ -56,7 +56,7 @@ enum ChunkVersionCmp {
     Ge(u8),
 }
 
-impl ChunkVersionCmp {
+impl VersionCmp {
     fn parse(attr: &syn::Attribute) -> Option<Self> {
         match attr.parse_args::<syn::ExprCall>() {
             Ok(call) => {
@@ -73,12 +73,12 @@ impl ChunkVersionCmp {
                 match call.func.as_ref() {
                     syn::Expr::Path(path) => {
                         match path.path.get_ident().unwrap().to_string().as_str() {
-                            "Eq" => Some(ChunkVersionCmp::Eq(number)),
-                            "Ne" => Some(ChunkVersionCmp::Ne(number)),
-                            "Lt" => Some(ChunkVersionCmp::Lt(number)),
-                            "Le" => Some(ChunkVersionCmp::Le(number)),
-                            "Gt" => Some(ChunkVersionCmp::Gt(number)),
-                            "Ge" => Some(ChunkVersionCmp::Ge(number)),
+                            "Eq" => Some(VersionCmp::Eq(number)),
+                            "Ne" => Some(VersionCmp::Ne(number)),
+                            "Lt" => Some(VersionCmp::Lt(number)),
+                            "Le" => Some(VersionCmp::Le(number)),
+                            "Gt" => Some(VersionCmp::Gt(number)),
+                            "Ge" => Some(VersionCmp::Ge(number)),
                             _ => panic!(),
                         }
                     }
@@ -90,8 +90,8 @@ impl ChunkVersionCmp {
     }
 }
 
-fn generate_chunk_version_cmp(cmp: &ChunkVersionCmp) -> TokenStream2 {
-    use ChunkVersionCmp::*;
+fn generate_version_cmp(cmp: &VersionCmp) -> TokenStream2 {
+    use VersionCmp::*;
     match cmp {
         Eq(v) => quote!( == #v),
         Ne(v) => quote!( != #v),
@@ -102,45 +102,45 @@ fn generate_chunk_version_cmp(cmp: &ChunkVersionCmp) -> TokenStream2 {
     }
 }
 
-struct OnChunkVersion {
-    major: Option<ChunkVersionCmp>,
-    minor: Option<ChunkVersionCmp>,
+struct IfVersion {
+    major: Option<VersionCmp>,
+    minor: Option<VersionCmp>,
 }
 
-impl OnChunkVersion {
+impl IfVersion {
     fn parse(attrs: &Vec<syn::Attribute>) -> Self {
         let major = match attrs
             .iter()
-            .find(|attr| attr.path.is_ident("on_chunk_major_version"))
+            .find(|attr| attr.path.is_ident("if_major_version"))
         {
-            Some(attr) => ChunkVersionCmp::parse(attr),
+            Some(attr) => VersionCmp::parse(attr),
             None => None,
         };
         let minor = match attrs
             .iter()
-            .find(|attr| attr.path.is_ident("on_chunk_minor_version"))
+            .find(|attr| attr.path.is_ident("if_minor_version"))
         {
-            Some(attr) => ChunkVersionCmp::parse(attr),
+            Some(attr) => VersionCmp::parse(attr),
             None => None,
         };
         Self { major, minor }
     }
 }
 
-fn generate_on_chunk_version_condition(on_chunk_version: &OnChunkVersion) -> TokenStream2 {
-    match (&on_chunk_version.major, &on_chunk_version.minor) {
+fn generate_if_version_condition(if_version: &IfVersion) -> TokenStream2 {
+    match (&if_version.major, &if_version.minor) {
         (None, None) => quote!(true),
         (Some(major), None) => {
-            let major_cmp = generate_chunk_version_cmp(major);
+            let major_cmp = generate_version_cmp(major);
             quote!( version.major() # major_cmp )
         }
         (None, Some(minor)) => {
-            let minor_cmp = generate_chunk_version_cmp(minor);
+            let minor_cmp = generate_version_cmp(minor);
             quote!( version.minor() # minor_cmp )
         }
         (Some(major), Some(minor)) => {
-            let major_cmp = generate_chunk_version_cmp(major);
-            let minor_cmp = generate_chunk_version_cmp(minor);
+            let major_cmp = generate_version_cmp(major);
+            let minor_cmp = generate_version_cmp(minor);
             quote!( version.major() #major_cmp && version.minor() #minor_cmp )
         }
     }
@@ -163,7 +163,7 @@ struct FieldAttrs {
     typecode: Option<syn::Type>,
     padding: Option<syn::Type>,
     underlying_type: Option<syn::Type>,
-    on_chunk_version: OnChunkVersion,
+    if_version: IfVersion,
 }
 
 impl FieldAttrs {
@@ -172,7 +172,7 @@ impl FieldAttrs {
             typecode: Self::parse_typecode(&field.attrs),
             padding: Self::parse_padding(&field.attrs),
             underlying_type: Self::parse_underlying_type(&field.attrs),
-            on_chunk_version: OnChunkVersion::parse(&field.attrs),
+            if_version: IfVersion::parse(&field.attrs),
         }
     }
 
@@ -208,8 +208,8 @@ impl FieldAttrs {
         field,
         with_version,
         from_chunk_version,
-        on_chunk_major_version,
-        on_chunk_minor_version,
+        if_major_version,
+        if_minor_version,
         padding,
         underlying_type
     )
@@ -331,7 +331,7 @@ fn generate_type_trait_bounds_deserialize(fields: &syn::Fields) -> Vec<TokenStre
 fn generate_body_deserialize(data: &syn::DataStruct, struct_attrs: &StructAttrs) -> TokenStream2 {
     let version_deserialize = generate_version_deserialize(&struct_attrs.with_version);
     let body_core = generate_body_core_deserialize(data, struct_attrs);
-    let condition = generate_on_chunk_version_condition(&struct_attrs.on_chunk_version);
+    let condition = generate_if_version_condition(&struct_attrs.if_version);
     quote! {
         #version_deserialize
         if #condition {
@@ -433,7 +433,7 @@ fn generate_field_deserializes(
                 let ty_str = ty.to_string();
                 let attrs = FieldAttrs::parse(raw_field);
                 let padding_deserialize = generate_padding_deserialize(&attrs, struct_attrs);
-                let on_chunk_version_conditions = generate_on_chunk_version_condition(&attrs.on_chunk_version);
+                let if_version_conditions = generate_if_version_condition(&attrs.if_version);
                 match struct_attrs.table.0 {
                     true => {
                         let deserialize = match attrs.underlying_type {
@@ -461,7 +461,7 @@ fn generate_field_deserializes(
                         let typecode = attrs.typecode.as_ref().unwrap();
                         quote!(
                             typecode::#typecode => {
-                                if #on_chunk_version_conditions {
+                                if #if_version_conditions {
                                     #padding_deserialize
                                     table.#ident = #deserialize;
                                     match chunk.seek(SeekFrom::End(0)) {
@@ -507,7 +507,7 @@ fn generate_field_deserializes(
                         };
                         quote! {
                             #ident: {
-                                if #on_chunk_version_conditions {
+                                if #if_version_conditions {
                                     #padding_deserialize
                                     #deserialize
                                 } else {
