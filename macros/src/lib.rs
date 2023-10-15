@@ -5,7 +5,7 @@ use syn::{parse_macro_input, Data, DeriveInput, Fields};
 
 struct StructAttrs {
     table: TableAttr,
-    chunk_version: ChunkVersion,
+    with_version: WithVersion,
     on_chunk_version: OnChunkVersion,
 }
 
@@ -13,24 +13,21 @@ impl StructAttrs {
     fn parse(attrs: &Vec<syn::Attribute>) -> Self {
         Self {
             table: TableAttr::parse(attrs),
-            chunk_version: ChunkVersion::parse(attrs),
+            with_version: WithVersion::parse(attrs),
             on_chunk_version: OnChunkVersion::parse(attrs),
         }
     }
 }
 
-enum ChunkVersion {
+enum WithVersion {
     Short,
     Big,
     None,
 }
 
-impl ChunkVersion {
+impl WithVersion {
     fn parse(attrs: &Vec<syn::Attribute>) -> Self {
-        match attrs
-            .iter()
-            .find(|attr| attr.path.is_ident("chunk_version"))
-        {
+        match attrs.iter().find(|attr| attr.path.is_ident("with_version")) {
             Some(attr) => match attr.parse_args::<syn::Path>() {
                 Ok(expr) => {
                     if expr.is_ident("short") {
@@ -209,7 +206,7 @@ impl FieldAttrs {
     attributes(
         table,
         field,
-        chunk_version,
+        with_version,
         from_chunk_version,
         on_chunk_major_version,
         on_chunk_minor_version,
@@ -285,19 +282,19 @@ fn generate_chunk_trait_bounds_deserialize(struct_attrs: &StructAttrs) -> TokenS
         },
         false => quote!(),
     };
-    let chunk_version_trait_bounds = match struct_attrs.chunk_version {
-        ChunkVersion::Big => quote! {
+    let with_version_trait_bounds = match struct_attrs.with_version {
+        WithVersion::Big => quote! {
             chunk::BigVersion: Deserialize<V>,
             ErrorStack: From<<chunk::BigVersion as Deserialize<V>>::Error>,
         },
-        ChunkVersion::Short => quote! {
+        WithVersion::Short => quote! {
             chunk::ShortVersion: Deserialize<V>,
             ErrorStack: From<<chunk::ShortVersion as Deserialize<V>>::Error>,
         },
-        ChunkVersion::None => quote! {},
+        WithVersion::None => quote! {},
     };
     quote! {
-        #chunk_version_trait_bounds
+        #with_version_trait_bounds
         #chunk_begin_trait_bounds
     }
 }
@@ -332,7 +329,7 @@ fn generate_type_trait_bounds_deserialize(fields: &syn::Fields) -> Vec<TokenStre
 }
 
 fn generate_body_deserialize(data: &syn::DataStruct, struct_attrs: &StructAttrs) -> TokenStream2 {
-    let version_deserialize = generate_version_deserialize(&struct_attrs.chunk_version);
+    let version_deserialize = generate_version_deserialize(&struct_attrs.with_version);
     let body_core = generate_body_core_deserialize(data, struct_attrs);
     let condition = generate_on_chunk_version_condition(&struct_attrs.on_chunk_version);
     quote! {
@@ -388,15 +385,15 @@ fn generate_body_core_deserialize(
     }
 }
 
-fn generate_version_deserialize(chunk_version: &ChunkVersion) -> TokenStream2 {
-    match chunk_version {
-        ChunkVersion::Big => {
+fn generate_version_deserialize(with_version: &WithVersion) -> TokenStream2 {
+    match with_version {
+        WithVersion::Big => {
             quote!(let version = <chunk::BigVersion as Deserialize<V>>::deserialize(ostream)?;)
         }
-        ChunkVersion::Short => {
+        WithVersion::Short => {
             quote!(let version = <chunk::ShortVersion as Deserialize<V>>::deserialize(ostream)?;)
         }
-        ChunkVersion::None => quote!(),
+        WithVersion::None => quote!(),
     }
 }
 

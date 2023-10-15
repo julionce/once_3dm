@@ -36,7 +36,7 @@ mod v2 {
     use super::*;
 
     #[derive(Default, Deserialize)]
-    #[chunk_version(short)]
+    #[with_version(short)]
     #[on_chunk_major_version(Eq(1))]
     pub struct RevisionHistory {
         pub created_by: String,

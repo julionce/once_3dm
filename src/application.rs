@@ -16,7 +16,7 @@ mod v2 {
     use super::*;
 
     #[derive(Default, Deserialize)]
-    #[chunk_version(short)]
+    #[with_version(short)]
     pub struct Application {
         pub name: String,
         pub url: String,
