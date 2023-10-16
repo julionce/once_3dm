@@ -3,6 +3,7 @@ use std::mem::size_of;
 use crate::{
     chunk,
     compressed_buffer::CompressedBuffer,
+    deserialize,
     deserialize::{Deserialize, FileVersion},
     error::{Error, ErrorKind, ErrorStack},
 };
@@ -77,14 +78,14 @@ where
         T: OStream,
     {
         let mut bitmap = Bitmap::default();
-        bitmap.header = <Header as Deserialize<V>>::deserialize(ostream)?;
+        bitmap.header = deserialize!(Header, V, ostream, "header");
         let palette_limit = bitmap.palette_color_count() as u64 * size_of::<Color>() as u64;
         let image_limit = bitmap.header.size_image as u64;
         let mut palette_and_image_chunk = ostream.ochunk(Some(palette_limit + image_limit));
         let mut palette_chunk = palette_and_image_chunk.ochunk(Some(palette_limit));
-        bitmap.palette = <Palette as Deserialize<V>>::deserialize(&mut palette_chunk)?;
+        bitmap.palette = deserialize!(Palette, V, &mut palette_chunk, "palette");
         palette_and_image_chunk = palette_chunk.into_inner();
-        bitmap.pixels = <Pixels as Deserialize<V>>::deserialize(&mut palette_and_image_chunk)?;
+        bitmap.pixels = deserialize!(Pixels, V, &mut palette_and_image_chunk, "pixels");
         Ok(bitmap)
     }
 }
@@ -112,12 +113,12 @@ where
         T: OStream,
     {
         let mut bitmap = Bitmap::default();
-        bitmap.header = <Header as Deserialize<V>>::deserialize(ostream)?;
+        bitmap.header = deserialize!(Header, V, ostream, "header");
 
         let palette_limit = bitmap.palette_color_count() as u64 * size_of::<Color>() as u64;
         let image_limit = bitmap.header.size_image as u64;
 
-        let buffer = <CompressedBuffer as Deserialize<V>>::deserialize(ostream)?;
+        let buffer = deserialize!(CompressedBuffer, V, ostream, "buffer");
         if buffer.size == palette_limit + image_limit {
             // TODO: conver Vec<u8> to Palette
             // bitmap.palette = buffer.inner[..palette_limit];
@@ -126,7 +127,7 @@ where
         } else if buffer.size == palette_limit {
             // TODO: conver Vec<u8> to Palette
             // bitmap.palette = buffer.inner;
-            let buffer = <CompressedBuffer as Deserialize<V>>::deserialize(ostream)?;
+            let buffer = deserialize!(CompressedBuffer, V, ostream, "buffer");
             if buffer.size == image_limit {
                 Ok(Self { inner: bitmap })
             } else {

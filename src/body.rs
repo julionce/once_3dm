@@ -4,7 +4,7 @@ use once_io::OStream;
 use std::io::{Seek, SeekFrom};
 
 use crate::{
-    chunk,
+    chunk, deserialize,
     deserialize::{Deserialize, FileVersion, V1, V2, V3, V4, V50, V60, V70},
     error::{Error, ErrorKind, ErrorStack},
     properties::Properties,

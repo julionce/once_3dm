@@ -1,7 +1,7 @@
 use crate::{
     application::Application,
     bitmap::{Bitmap, CompressedBitmap},
-    chunk,
+    chunk, deserialize,
     deserialize::{Deserialize, FileVersion, V1, V2, V3, V4, V50, V60, V70},
     error::{Error, ErrorKind, ErrorStack},
     notes::Notes,
@@ -54,58 +54,28 @@ mod v1 {
             let mut properties = Properties::default();
 
             loop {
-                let begin = match <chunk::Begin as Deserialize<V>>::deserialize(ostream) {
-                    Ok(ok) => ok,
-                    Err(e) => {
-                        let mut stack: ErrorStack = From::from(e);
-                        stack.push_frame("begin", "chunk::Begin");
-                        return Err(stack);
-                    }
-                };
-                let mut chunk = ostream.ochunk(Some(begin.length));
+                let begin = deserialize!(chunk::Begin, V, ostream, "begin");
+                let input = &mut ostream.ochunk(Some(begin.length));
                 match begin.typecode {
                     typecode::SUMMARY => {
                         properties.revision_history =
-                            match <RevisionHistory as Deserialize<V>>::deserialize(&mut chunk) {
-                                Ok(ok) => Some(ok),
-                                Err(e) => {
-                                    let mut stack = ErrorStack::from(e);
-                                    stack.push_frame("revision_history", "RevisionHistory");
-                                    return Err(stack);
-                                }
-                            };
-                        chunk.seek(SeekFrom::End(0)).unwrap();
+                            Some(deserialize!(RevisionHistory, V, input, "revision_history"));
+                        input.seek(SeekFrom::End(0)).unwrap();
                     }
                     typecode::NOTES => {
-                        properties.notes = match <Notes as Deserialize<V>>::deserialize(&mut chunk)
-                        {
-                            Ok(ok) => Some(ok),
-                            Err(e) => {
-                                let mut stack = ErrorStack::from(e);
-                                stack.push_frame("notes", "Notes");
-                                return Err(stack);
-                            }
-                        };
-                        chunk.seek(SeekFrom::End(0)).unwrap();
+                        properties.notes = Some(deserialize!(Notes, V, input, "notes"));
+                        input.seek(SeekFrom::End(0)).unwrap();
                     }
                     typecode::BITMAPPREVIEW => {
-                        properties.preview =
-                            match <Bitmap as Deserialize<V>>::deserialize(&mut chunk) {
-                                Ok(ok) => Some(ok),
-                                Err(e) => {
-                                    let mut stack = ErrorStack::from(e);
-                                    stack.push_frame("preview", "Bitmap");
-                                    return Err(stack);
-                                }
-                            };
-                        chunk.seek(SeekFrom::End(0)).unwrap();
+                        properties.preview = Some(deserialize!(Bitmap, V, input, "preview"));
+                        input.seek(SeekFrom::End(0)).unwrap();
                     }
                     typecode::CURRENTLAYER | typecode::LAYER => {
-                        chunk.seek(SeekFrom::End(0)).unwrap();
+                        input.seek(SeekFrom::End(0)).unwrap();
                         break;
                     }
                     _ => {
-                        chunk.seek(SeekFrom::End(0)).unwrap();
+                        input.seek(SeekFrom::End(0)).unwrap();
                     }
                 }
                 if properties.notes.is_some()

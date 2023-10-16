@@ -3,6 +3,7 @@ use std::io::Read;
 
 use crate::{
     chunk::Begin,
+    deserialize,
     deserialize::{Deserialize, FileVersion},
     error::{Error, ErrorKind, ErrorStack},
     typecode,
@@ -28,7 +29,7 @@ where
     where
         T: OStream,
     {
-        let begin = <Begin as Deserialize<V>>::deserialize(ostream)?;
+        let begin = deserialize!(Begin, V, ostream, "begin");
         if typecode::COMMENTBLOCK == begin.typecode {
             let mut chunk = ostream.ochunk(Some(begin.length));
             let mut string = String::new();

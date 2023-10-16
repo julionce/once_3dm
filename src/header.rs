@@ -2,6 +2,7 @@ use once_io::OStream;
 
 use crate::{
     comment::Comment,
+    deserialize,
     deserialize::{Deserialize, V1, V2, V3, V4, V50, V60, V70},
     error::{Error, ErrorKind, ErrorStack},
     start_section::StartSection,
@@ -33,20 +34,20 @@ impl Deserialize<V1> for Header {
             }
             Err(e) => return Err(ErrorStack::new(Error::IoError(e))),
         }
-        let mut version = <Version as Deserialize<V1>>::deserialize(ostream)?;
+        let mut version = deserialize!(Version, V1, ostream, "version");
         let start_section = match version {
-            Version::V1 => <StartSection as Deserialize<V1>>::deserialize(ostream)?,
+            Version::V1 => deserialize!(StartSection, V1, ostream, "start_section"),
             _ => StartSection { version },
         };
         version = start_section.version;
         let comment = match version {
-            Version::V1 => <Comment as Deserialize<V1>>::deserialize(ostream)?,
-            Version::V2 => <Comment as Deserialize<V2>>::deserialize(ostream)?,
-            Version::V3 => <Comment as Deserialize<V3>>::deserialize(ostream)?,
-            Version::V4 => <Comment as Deserialize<V4>>::deserialize(ostream)?,
-            Version::V50 => <Comment as Deserialize<V50>>::deserialize(ostream)?,
-            Version::V60 => <Comment as Deserialize<V60>>::deserialize(ostream)?,
-            Version::V70 => <Comment as Deserialize<V70>>::deserialize(ostream)?,
+            Version::V1 => deserialize!(Comment, V1, ostream, "comment"),
+            Version::V2 => deserialize!(Comment, V2, ostream, "comment"),
+            Version::V3 => deserialize!(Comment, V3, ostream, "comment"),
+            Version::V4 => deserialize!(Comment, V4, ostream, "comment"),
+            Version::V50 => deserialize!(Comment, V50, ostream, "comment"),
+            Version::V60 => deserialize!(Comment, V60, ostream, "comment"),
+            Version::V70 => deserialize!(Comment, V70, ostream, "comment"),
         };
         Ok(Header {
             version,

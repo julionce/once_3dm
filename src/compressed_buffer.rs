@@ -1,5 +1,5 @@
 use crate::{
-    chunk,
+    chunk, deserialize,
     deserialize::{Deserialize, FileVersion},
     error::{Error, ErrorKind, ErrorStack},
     typecode,
@@ -30,21 +30,21 @@ where
     where
         T: OStream,
     {
-        let size = <u32 as Deserialize<V>>::deserialize(ostream)? as u64;
+        let size = deserialize!(u32, V, ostream, "size") as u64;
         //TODO: handle crc.
-        let _crc = <u32 as Deserialize<V>>::deserialize(ostream)?;
-        let mode = <u8 as Deserialize<V>>::deserialize(ostream)?;
+        let _crc = deserialize!(u32, V, ostream, "crc");
+        let mode = deserialize!(u8, V, ostream, "mode");
         match mode {
             0u8 => {
                 let mut chunk = ostream.ochunk(Some(size));
                 Ok(Self {
                     mode: CompressionMode::Uncompressed,
                     size,
-                    inner: <Vec<u8> as Deserialize<V>>::deserialize(&mut chunk)?,
+                    inner: deserialize!(Vec<u8>, V, &mut chunk, "inner"),
                 })
             }
             1u8 => {
-                let begin = <chunk::Begin as Deserialize<V>>::deserialize(ostream)?;
+                let begin = deserialize!(chunk::Begin, V, ostream, "begin");
                 match begin.typecode {
                     typecode::ANONYMOUS_CHUNK => {
                         let limit = begin.length.checked_sub(4);
@@ -55,7 +55,7 @@ where
                                 Ok(Self {
                                     mode: CompressionMode::Compressed,
                                     size,
-                                    inner: <Vec<u8> as Deserialize<V>>::deserialize(&mut chunk)?,
+                                    inner: deserialize!(Vec<u8>, V, &mut chunk, "inner"),
                                 })
                             }
                             None => {

@@ -38,6 +38,23 @@ where
         T: OStream;
 }
 
+#[macro_export]
+macro_rules! deserialize {
+    ($type: ty, $version: ty, $ostream: expr) => {
+        <$type as Deserialize<$version>>::deserialize($ostream)
+    };
+    ($type: ty, $version: ty, $ostream: expr, $member: tt) => {
+        match <$type as Deserialize<$version>>::deserialize($ostream) {
+            Ok(ok) => ok,
+            Err(e) => {
+                let mut stack: ErrorStack = From::from(e);
+                stack.push_frame($member, stringify!($type));
+                return Err(stack);
+            }
+        }
+    };
+}
+
 macro_rules! impl_deserialize_for_num {
     ($type: ty) => {
         impl<V> Deserialize<V> for $type
@@ -82,7 +99,7 @@ impl Deserialize<V1> for String {
     where
         T: OStream,
     {
-        let length = <u32 as Deserialize<V1>>::deserialize(ostream)?;
+        let length = deserialize!(u32, V1, ostream, "length");
         let mut string = String::new();
         match ostream.take(length as u64).read_to_string(&mut string) {
             Ok(size) => {
@@ -130,7 +147,7 @@ impl Deserialize<V3> for String {
     where
         T: OStream,
     {
-        <String as Deserialize<V2>>::deserialize(ostream)
+        deserialize!(String, V2, ostream)
     }
 }
 
@@ -141,7 +158,7 @@ impl Deserialize<V4> for String {
     where
         T: OStream,
     {
-        <String as Deserialize<V2>>::deserialize(ostream)
+        deserialize!(String, V2, ostream)
     }
 }
 
@@ -152,7 +169,7 @@ impl Deserialize<V50> for String {
     where
         T: OStream,
     {
-        <String as Deserialize<V2>>::deserialize(ostream)
+        deserialize!(String, V2, ostream)
     }
 }
 
@@ -163,7 +180,7 @@ impl Deserialize<V60> for String {
     where
         T: OStream,
     {
-        <String as Deserialize<V2>>::deserialize(ostream)
+        deserialize!(String, V2, ostream)
     }
 }
 
@@ -174,7 +191,7 @@ impl Deserialize<V70> for String {
     where
         T: OStream,
     {
-        <String as Deserialize<V2>>::deserialize(ostream)
+        deserialize!(String, V2, ostream)
     }
 }
 
@@ -236,10 +253,7 @@ mod tests {
             fn $test_name() {
                 let data = $value.to_le_bytes();
                 let mut reader = Cursor::new(data);
-                assert_eq!(
-                    <$type as Deserialize<V1>>::deserialize(&mut reader).unwrap(),
-                    $value
-                );
+                assert_eq!(deserialize!($type, V1, &mut reader).unwrap(), $value);
             }
         };
     }
@@ -291,7 +305,7 @@ mod tests {
     fn deserialize_vector_size_fill() {
         let data = [11u8, 0, 89u8, 0];
         let mut reader = Cursor::new(data);
-        let result = <Vec<u16> as Deserialize<V1>>::deserialize(&mut reader).unwrap();
+        let result = deserialize!(Vec<u16>, V1, &mut reader).unwrap();
         assert_eq!(result, vec![11u16, 89u16]);
     }
 
@@ -299,7 +313,7 @@ mod tests {
     fn deserialize_vector_size_not_fill() {
         let data = [11u8, 0, 89u8, 0, 0];
         let mut reader = Cursor::new(data);
-        let result = <Vec<u16> as Deserialize<V1>>::deserialize(&mut reader).unwrap();
+        let result = deserialize!(Vec<u16>, V1, &mut reader).unwrap();
         assert_eq!(result, vec![11u16, 89u16]);
     }
 }

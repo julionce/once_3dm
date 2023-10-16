@@ -1,6 +1,7 @@
 use once_3dm_macros::Deserialize;
 
 use crate::{
+    deserialize,
     deserialize::{Deserialize, FileVersion},
     error::ErrorStack,
 };

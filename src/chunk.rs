@@ -1,6 +1,7 @@
 use once_3dm_macros::Deserialize;
 
 use crate::{
+    deserialize,
     deserialize::{Deserialize, FileVersion, V1, V2, V3, V4, V50, V60, V70},
     error::{Error, ErrorKind, ErrorStack},
     typecode::{self, Typecode},
@@ -18,22 +19,16 @@ impl Deserialize<V1> for Begin {
     where
         T: once_io::OStream,
     {
-        let typecode = match <Typecode as Deserialize<V1>>::deserialize(ostream) {
-            Ok(ok) => ok,
-            Err(mut stack) => {
-                stack.push_frame("typecode", "Typecode");
-                return Err(stack);
-            }
-        };
+        let typecode = deserialize!(Typecode, V1, ostream, "typecode");
         let is_unsigned = 0 == (typecode::SHORT & typecode)
             || typecode::RGB == typecode
             || typecode::RGBDISPLAY == typecode
             || typecode::PROPERTIES_OPENNURBS_VERSION == typecode
             || typecode::OBJECT_RECORD_TYPE == typecode;
         let value = if is_unsigned {
-            <u32 as Deserialize<V1>>::deserialize(ostream)? as i64
+            deserialize!(u32, V1, ostream, "length") as i64
         } else {
-            <i32 as Deserialize<V1>>::deserialize(ostream)? as i64
+            deserialize!(i32, V1, ostream, "length") as i64
         };
         let is_long = (0 == typecode & typecode::SHORT) && (0 != typecode) && (0 < value);
         let length = if is_long { value as u64 } else { 0u64 };
@@ -49,7 +44,7 @@ impl Deserialize<V2> for Begin {
     where
         T: once_io::OStream,
     {
-        let typecode = <Typecode as Deserialize<V2>>::deserialize(ostream)?;
+        let typecode = deserialize!(Typecode, V2, ostream, "typecode");
         if typecode::PROPERTIES_OPENNURBS_VERSION == typecode {
             Ok(Begin {
                 typecode,
@@ -61,9 +56,9 @@ impl Deserialize<V2> for Begin {
                 || typecode::RGBDISPLAY == typecode
                 || typecode::OBJECT_RECORD_TYPE == typecode;
             let value = if is_unsigned {
-                <u32 as Deserialize<V2>>::deserialize(ostream)? as i64
+                deserialize!(u32, V2, ostream, "length") as i64
             } else {
-                <i32 as Deserialize<V2>>::deserialize(ostream)? as i64
+                deserialize!(i32, V2, ostream, "length") as i64
             };
             let is_long = (0 == typecode & typecode::SHORT) && (0 < value);
             let length = if is_long { value as u64 } else { 0u64 };
@@ -79,7 +74,7 @@ impl Deserialize<V3> for Begin {
     where
         T: once_io::OStream,
     {
-        <Begin as Deserialize<V2>>::deserialize(ostream)
+        deserialize!(Begin, V2, ostream)
     }
 }
 
@@ -90,7 +85,7 @@ impl Deserialize<V4> for Begin {
     where
         T: once_io::OStream,
     {
-        <Begin as Deserialize<V2>>::deserialize(ostream)
+        deserialize!(Begin, V2, ostream)
     }
 }
 
@@ -102,14 +97,14 @@ impl Deserialize<V50> for Begin {
     where
         T: once_io::OStream,
     {
-        let typecode = <Typecode as Deserialize<V50>>::deserialize(ostream)?;
+        let typecode = deserialize!(Typecode, V50, ostream, "typecode");
         if typecode::PROPERTIES_OPENNURBS_VERSION == typecode {
             Ok(Begin {
                 typecode,
                 length: 8u64,
             })
         } else {
-            let value = <u64 as Deserialize<V50>>::deserialize(ostream)?;
+            let value = deserialize!(u64, V50, ostream, "value");
             let is_long = (0 == typecode & typecode::SHORT) && (0 < value);
             let length = if is_long { value as u64 } else { 0u64 };
             Ok(Begin { typecode, length })
@@ -124,7 +119,7 @@ impl Deserialize<V60> for Begin {
     where
         T: once_io::OStream,
     {
-        <Begin as Deserialize<V50>>::deserialize(ostream)
+        deserialize!(Begin, V50, ostream)
     }
 }
 
@@ -135,7 +130,7 @@ impl Deserialize<V70> for Begin {
     where
         T: once_io::OStream,
     {
-        <Begin as Deserialize<V50>>::deserialize(ostream)
+        deserialize!(Begin, V50, ostream)
     }
 }
 
@@ -155,8 +150,8 @@ where
     where
         T: once_io::OStream,
     {
-        let major = <u32 as Deserialize<V>>::deserialize(ostream)?;
-        let minor = <u32 as Deserialize<V>>::deserialize(ostream)?;
+        let major = deserialize!(u32, V, ostream, "major");
+        let minor = deserialize!(u32, V, ostream, "minor");
         match (
             TryInto::<u8>::try_into(major),
             TryInto::<u8>::try_into(minor),

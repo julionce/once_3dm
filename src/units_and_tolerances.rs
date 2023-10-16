@@ -1,4 +1,5 @@
 use crate::{
+    deserialize,
     deserialize::{Deserialize, FileVersion},
     error::{Error, ErrorKind, ErrorStack},
 };
@@ -198,36 +199,41 @@ where
         T: once_io::OStream,
     {
         let mut ret = UnitsAndTolerances::default();
-        let version = <u32 as Deserialize<V>>::deserialize(ostream)?;
+        let version = deserialize!(u32, V, ostream, "version");
         if 100 <= version && 200 > version {
             let mut meters_per_unit = 1.0f64;
             let mut custom_unit_name = String::default();
 
             let unit_system: LengthUnitSystem =
-                match <u32 as Deserialize<V>>::deserialize(ostream)?.try_into() {
+                match deserialize!(u32, V, ostream, "unit_system").try_into() {
                     Ok(ok) => ok,
                     Err(e) => {
-                        return Err(ErrorStack::new(e));
+                        let mut ret = ErrorStack::new(e);
+                        ret.push_frame("unit_system", "LengthUnitSystem");
+                        return Err(ret);
                     }
                 };
-            ret.absolute_tolerance = <f64 as Deserialize<V>>::deserialize(ostream)?;
-            ret.angle_tolerance = <f64 as Deserialize<V>>::deserialize(ostream)?;
-            ret.relative_tolerance = <f64 as Deserialize<V>>::deserialize(ostream)?;
+            ret.absolute_tolerance = deserialize!(f64, V, ostream, "absolute_tolerance");
+            ret.angle_tolerance = deserialize!(f64, V, ostream, "angle_tolerance");
+            ret.relative_tolerance = deserialize!(f64, V, ostream, "relative_tolerance");
             if 101 <= version {
                 ret.distance_display_mode =
-                    match <u32 as Deserialize<V>>::deserialize(ostream)?.try_into() {
+                    match deserialize!(u32, V, ostream, "distance_display_mode").try_into() {
                         Ok(ok) => ok,
                         Err(e) => {
-                            return Err(ErrorStack::new(e));
+                            let mut ret = ErrorStack::new(e);
+                            ret.push_frame("dispance_display_mode", "DistanceDisplayMode");
+                            return Err(ret);
                         }
                     };
-                ret.distance_display_precission = <i32 as Deserialize<V>>::deserialize(ostream)?;
+                ret.distance_display_precission =
+                    deserialize!(i32, V, ostream, "distance_display_precission");
                 if 0 > ret.distance_display_precission || 20 < ret.distance_display_precission {
                     ret.distance_display_precission = 3;
                 }
                 if 102 <= version {
-                    meters_per_unit = <f64 as Deserialize<V>>::deserialize(ostream)?;
-                    custom_unit_name = <String as Deserialize<V>>::deserialize(ostream)?;
+                    meters_per_unit = deserialize!(f64, V, ostream, "meters_per_unit");
+                    custom_unit_name = deserialize!(String, V, ostream, "custom_unit_name");
                 }
             }
             ret.unit_system = match unit_system {

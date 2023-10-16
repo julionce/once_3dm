@@ -352,14 +352,7 @@ fn generate_body_core_deserialize(
             quote! {
                 let mut table = Self::default();
                 loop {
-                    let begin = match <chunk::Begin as Deserialize<V>>::deserialize(ostream) {
-                        Ok(ok) => ok,
-                        Err(e) => {
-                            let mut stack: ErrorStack = From::from(e);
-                            stack.push_frame("begin", "chunk::Begin");
-                            return Err(stack);
-                        }
-                    };
+                    let begin = deserialize!(chunk::Begin, V, ostream, "begin");
                     let mut chunk = ostream.ochunk(Some(begin.length));
                     match begin.typecode {
                         #(#field_deserializes)*
@@ -388,10 +381,10 @@ fn generate_body_core_deserialize(
 fn generate_version_deserialize(with_version: &WithVersion) -> TokenStream2 {
     match with_version {
         WithVersion::Big => {
-            quote!(let version = <chunk::BigVersion as Deserialize<V>>::deserialize(ostream)?;)
+            quote!(let version = deserialize!(chunk::BigVersion, V, ostream, "version");)
         }
         WithVersion::Short => {
-            quote!(let version = <chunk::ShortVersion as Deserialize<V>>::deserialize(ostream)?;)
+            quote!(let version = deserialize!(chunk::ShortVersion, V, ostream, "version");)
         }
         WithVersion::None => quote!(),
     }
@@ -403,8 +396,8 @@ fn generate_padding_deserialize(
 ) -> TokenStream2 {
     match &field_attrs.padding.as_ref() {
         Some(ty) => match struct_attrs.table.0 {
-            true => quote!(<#ty as Deserialize<V>>::deserialize(&mut chunk)?;),
-            false => quote!(<#ty as Deserialize<V>>::deserialize(ostream)?;),
+            true => quote!(deserialize!(#ty, V, &mut chunk, "padding");),
+            false => quote!(deserialize!(#ty, V, ostream, "padding");),
         },
         None => quote!(),
     }
@@ -448,14 +441,7 @@ fn generate_field_deserializes(
                                 }
                             },
                             None => quote! {
-                                match <#ty as Deserialize<V>>::deserialize(&mut chunk) {
-                                    Ok(ok) => ok,
-                                    Err(mut e) => {
-                                        let mut stack: ErrorStack = From::from(e);
-                                        stack.push_frame(#ident_str, #ty_str);
-                                        return Err(stack);
-                                    }
-                                }
+                                deserialize!(#ty, V, &mut chunk, #ident_str)
                             },
                         };
                         let typecode = attrs.typecode.as_ref().unwrap();
@@ -495,14 +481,7 @@ fn generate_field_deserializes(
                                 }
                             },
                             None => quote! {
-                                match <#ty as Deserialize<V>>::deserialize(ostream) {
-                                    Ok(ok) => ok,
-                                    Err(e) => {
-                                        let mut stack: ErrorStack = From::from(e);
-                                        stack.push_frame(#ident_str, #ty_str);
-                                        return Err(stack);
-                                    }
-                                }
+                                deserialize!(#ty, V, ostream, #ident_str)
                             },
                         };
                         quote! {

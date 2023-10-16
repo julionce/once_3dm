@@ -3,7 +3,7 @@ use std::io::SeekFrom;
 use once_io::OStream;
 
 use crate::{
-    chunk::Begin,
+    chunk, deserialize,
     deserialize::{Deserialize, V1},
     error::ErrorStack,
     typecode::{self},
@@ -24,8 +24,8 @@ impl Deserialize<V1> for StartSection {
         let backup_position = SeekFrom::Start(ostream.stream_position().unwrap());
         let mut version = Version::V1;
         loop {
-            let chunk_begin = <Begin as Deserialize<V1>>::deserialize(ostream)?;
-            match chunk_begin.typecode {
+            let begin = deserialize!(chunk::Begin, V1, ostream, "begin");
+            match begin.typecode {
                 typecode::SUMMARY
                 | typecode::BITMAPPREVIEW
                 | typecode::UNIT_AND_TOLERANCES
@@ -38,11 +38,11 @@ impl Deserialize<V1> for StartSection {
                 | typecode::NAMED_CPLANE
                 | typecode::NAMED_VIEW => {
                     ostream
-                        .seek(SeekFrom::Current(chunk_begin.length as i64))
+                        .seek(SeekFrom::Current(begin.length as i64))
                         .unwrap();
                 }
                 _ => {
-                    if typecode::TABLE == chunk_begin.typecode & 0xFFFF0000 {
+                    if typecode::TABLE == begin.typecode & 0xFFFF0000 {
                         version = Version::V2
                     }
                     break;

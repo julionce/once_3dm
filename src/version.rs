@@ -82,7 +82,7 @@ where
 mod tests {
     use std::io::Cursor;
 
-    use crate::deserialize::V1;
+    use crate::{deserialize, deserialize::V1};
 
     use super::*;
 
@@ -121,7 +121,7 @@ mod tests {
         let data = "       1".as_bytes();
         let mut ostream = Cursor::new(data);
         assert_eq!(
-            <Version as Deserialize<V1>>::deserialize(&mut ostream).ok(),
+            deserialize!(Version, V1, &mut ostream).ok(),
             Some(Version::V1)
         );
     }
@@ -130,13 +130,13 @@ mod tests {
     fn deserialize_invalid_version() {
         let data = "        a".as_bytes();
         let mut ostream = Cursor::new(data);
-        assert!(<Version as Deserialize<V1>>::deserialize(&mut ostream).is_err());
+        assert!(deserialize!(Version, V1, &mut ostream).is_err());
     }
 
     #[test]
     fn deserialize_io_error() {
         let data = "    1".as_bytes();
         let mut ostream = Cursor::new(data);
-        assert!(<Version as Deserialize<V1>>::deserialize(&mut ostream).is_err());
+        assert!(deserialize!(Version, V1, &mut ostream).is_err());
     }
 }
