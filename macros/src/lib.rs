@@ -390,15 +390,9 @@ fn generate_version_deserialize(with_version: &WithVersion) -> TokenStream2 {
     }
 }
 
-fn generate_padding_deserialize(
-    field_attrs: &FieldAttrs,
-    struct_attrs: &StructAttrs,
-) -> TokenStream2 {
+fn generate_padding_deserialize(field_attrs: &FieldAttrs) -> TokenStream2 {
     match &field_attrs.padding.as_ref() {
-        Some(ty) => match struct_attrs.table.0 {
-            true => quote!(deserialize!(#ty, V, input, "padding");),
-            false => quote!(deserialize!(#ty, V, input, "padding");),
-        },
+        Some(ty) => quote!(deserialize!(#ty, V, input, "padding");),
         None => quote!(),
     }
 }
@@ -425,7 +419,7 @@ fn generate_field_deserializes(
                 let ident_str = ident.to_string();
                 let ty_str = ty.to_string();
                 let attrs = FieldAttrs::parse(raw_field);
-                let padding_deserialize = generate_padding_deserialize(&attrs, struct_attrs);
+                let padding_deserialize = generate_padding_deserialize(&attrs);
                 let if_version_conditions = generate_if_version_condition(&attrs.if_version);
                 match struct_attrs.table.0 {
                     true => {
