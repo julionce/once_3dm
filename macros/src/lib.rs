@@ -352,17 +352,17 @@ fn generate_body_core_deserialize(
                 let mut table = Self::default();
                 loop {
                     let begin = deserialize!(chunk::Begin, V, ostream, "begin");
-                    let mut chunk = ostream.ochunk(Some(begin.length));
+                    let input = &mut ostream.ochunk(Some(begin.length));
                     match begin.typecode {
                         #(#field_deserializes)*
                         typecode::ENDOFTABLE | typecode::ENDOFFILE => {
                             //TODO: remove unwrap
-                            chunk.seek(SeekFrom::End(0)).unwrap();
+                            input.seek(SeekFrom::End(0)).unwrap();
                             break;
                         }
                         _ => {
                             //TODO: remove unwrap
-                            chunk.seek(SeekFrom::End(0)).unwrap();
+                            input.seek(SeekFrom::End(0)).unwrap();
                         }
                     }
                 }
@@ -371,6 +371,7 @@ fn generate_body_core_deserialize(
         }
         false => {
             quote! {
+                let input = ostream;
                 Ok(Self {#(#field_deserializes),*})
             }
         }
@@ -395,8 +396,8 @@ fn generate_padding_deserialize(
 ) -> TokenStream2 {
     match &field_attrs.padding.as_ref() {
         Some(ty) => match struct_attrs.table.0 {
-            true => quote!(deserialize!(#ty, V, &mut chunk, "padding");),
-            false => quote!(deserialize!(#ty, V, ostream, "padding");),
+            true => quote!(deserialize!(#ty, V, input, "padding");),
+            false => quote!(deserialize!(#ty, V, input, "padding");),
         },
         None => quote!(),
     }
@@ -430,7 +431,7 @@ fn generate_field_deserializes(
                     true => {
                         let deserialize = match attrs.underlying_type {
                             Some(underlying_ty) => quote! {
-                                match <#underlying_ty as Deserialize<V>>::deserialize(&mut chunk) {
+                                match <#underlying_ty as Deserialize<V>>::deserialize(input) {
                                     Ok(ok) => ok.into(),
                                     Err(mut e) => {
                                         let mut stack: ErrorStack = From::from(e);
@@ -440,7 +441,7 @@ fn generate_field_deserializes(
                                 }
                             },
                             None => quote! {
-                                deserialize!(#ty, V, &mut chunk, #ident_str)
+                                deserialize!(#ty, V, input, #ident_str)
                             },
                         };
                         let typecode = attrs.typecode.as_ref().unwrap();
@@ -449,7 +450,7 @@ fn generate_field_deserializes(
                                 if #if_version_conditions {
                                     #padding_deserialize
                                     table.#ident = #deserialize;
-                                    match chunk.seek(SeekFrom::End(0)) {
+                                    match input.seek(SeekFrom::End(0)) {
                                         Ok(v) => {
                                             if v != begin.length {
                                                 let mut stack = ErrorStack::new(Error::Simple(ErrorKind::InvalidChunkSize));
@@ -470,7 +471,7 @@ fn generate_field_deserializes(
                     false => {
                         let deserialize = match attrs.underlying_type {
                             Some(underlying_ty) => quote! {
-                                match <#underlying_ty as Deserialize<V>>::deserialize(ostream) {
+                                match <#underlying_ty as Deserialize<V>>::deserialize(input) {
                                     Ok(ok) => ok.into(),
                                     Err(e) => {
                                         let mut stack: ErrorStack = From::from(e);
@@ -480,7 +481,7 @@ fn generate_field_deserializes(
                                 }
                             },
                             None => quote! {
-                                deserialize!(#ty, V, ostream, #ident_str)
+                                deserialize!(#ty, V, input, #ident_str)
                             },
                         };
                         quote! {
