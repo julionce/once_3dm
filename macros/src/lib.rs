@@ -207,7 +207,6 @@ impl FieldAttrs {
         table,
         field,
         with_version,
-        from_chunk_version,
         if_major_version,
         if_minor_version,
         padding,
