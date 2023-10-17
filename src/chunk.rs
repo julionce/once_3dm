@@ -1,4 +1,7 @@
+use std::io::{Seek, SeekFrom};
+
 use once_3dm_macros::Deserialize;
+use once_io::OStream;
 
 use crate::{
     deserialize,
@@ -131,6 +134,37 @@ impl Deserialize<V70> for Begin {
         T: once_io::OStream,
     {
         deserialize!(Begin, V50, ostream)
+    }
+}
+
+pub struct Chunk<T> {
+    pub inner: T,
+}
+
+impl<T, V> Deserialize<V> for Chunk<T>
+where
+    V: FileVersion,
+    Begin: Deserialize<V>,
+    ErrorStack: From<<Begin as Deserialize<V>>::Error>,
+    T: Deserialize<V>,
+    ErrorStack: From<<T as Deserialize<V>>::Error>,
+{
+    type Error = ErrorStack;
+
+    fn deserialize<S>(ostream: &mut S) -> Result<Self, Self::Error>
+    where
+        S: OStream,
+    {
+        let begin = deserialize!(Begin, V, ostream, "begin");
+        let chunk = &mut ostream.ochunk(Some(begin.length));
+        let ret = Self {
+            inner: deserialize!(T, V, chunk, "inner"),
+        };
+        match chunk.seek(SeekFrom::End(0)) {
+            Ok(_) => (),
+            Err(e) => return Err(ErrorStack::new(Error::IoError(e))),
+        }
+        Ok(ret)
     }
 }
 
