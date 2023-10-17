@@ -351,18 +351,15 @@ fn generate_body_core_deserialize(
             quote! {
                 let mut table = Self::default();
                 loop {
-                    let begin = deserialize!(chunk::Begin, V, ostream, "begin");
-                    let input = &mut ostream.ochunk(Some(begin.length));
-                    match begin.typecode {
+                    let typecode = deserialize!(Rollback<Typecode>, V, ostream, "typecode").inner;
+                    match typecode {
                         #(#field_deserializes)*
                         typecode::ENDOFTABLE | typecode::ENDOFFILE => {
-                            //TODO: remove unwrap
-                            input.seek(SeekFrom::End(0)).unwrap();
+                            deserialize!(Chunk<()>, V, ostream)?;
                             break;
                         }
                         _ => {
-                            //TODO: remove unwrap
-                            input.seek(SeekFrom::End(0)).unwrap();
+                            deserialize!(Chunk<()>, V, ostream)?;
                         }
                     }
                 }
@@ -417,7 +414,6 @@ fn generate_field_deserializes(
                     _ => panic!(),
                 };
                 let ident_str = ident.to_string();
-                let ty_str = ty.to_string();
                 let attrs = FieldAttrs::parse(raw_field);
                 let padding_deserialize = generate_padding_deserialize(&attrs);
                 let if_version_conditions = generate_if_version_condition(&attrs.if_version);
@@ -425,17 +421,11 @@ fn generate_field_deserializes(
                     true => {
                         let deserialize = match attrs.underlying_type {
                             Some(underlying_ty) => quote! {
-                                match <#underlying_ty as Deserialize<V>>::deserialize(input) {
-                                    Ok(ok) => ok.into(),
-                                    Err(mut e) => {
-                                        let mut stack: ErrorStack = From::from(e);
-                                        stack.push_frame(#ident_str, #ty_str);
-                                        return Err(stack);
-                                    }
-                                }
+                                //TODO: improve deserialize! to allow #ty_str as parameter
+                                deserialize!(Chunk<#underlying_ty>, V, ostream, #ident_str).inner.into()
                             },
                             None => quote! {
-                                deserialize!(#ty, V, input, #ident_str)
+                                deserialize!(Chunk<#ty>, V, ostream, #ident_str).inner
                             },
                         };
                         let typecode = attrs.typecode.as_ref().unwrap();
@@ -444,20 +434,6 @@ fn generate_field_deserializes(
                                 if #if_version_conditions {
                                     #padding_deserialize
                                     table.#ident = #deserialize;
-                                    match input.seek(SeekFrom::End(0)) {
-                                        Ok(v) => {
-                                            if v != begin.length {
-                                                let mut stack = ErrorStack::new(Error::Simple(ErrorKind::InvalidChunkSize));
-                                                stack.push_frame(#ident_str, #ty_str);
-                                                return Err(stack);
-                                            }
-                                        },
-                                        Err(e) => {
-                                            let mut stack = ErrorStack::new(Error::IoError(e));
-                                            stack.push_frame(#ident_str, #ty_str);
-                                            return Err(stack);
-                                        }
-                                    };
                                 }
                             }
                         )
@@ -465,14 +441,8 @@ fn generate_field_deserializes(
                     false => {
                         let deserialize = match attrs.underlying_type {
                             Some(underlying_ty) => quote! {
-                                match <#underlying_ty as Deserialize<V>>::deserialize(input) {
-                                    Ok(ok) => ok.into(),
-                                    Err(e) => {
-                                        let mut stack: ErrorStack = From::from(e);
-                                        stack.push_frame(#ident_str, #ty_str);
-                                        return Err(stack);
-                                    }
-                                }
+                                //TODO: improve deserialize! to allow #ty_str as parameter
+                                deserialize!(#underlying_ty, V, input, #ident_str)
                             },
                             None => quote! {
                                 deserialize!(#ty, V, input, #ident_str)

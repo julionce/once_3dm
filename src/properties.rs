@@ -1,13 +1,15 @@
 use crate::{
     application::Application,
     bitmap::{Bitmap, CompressedBitmap},
-    chunk, deserialize,
+    chunk::{self, Chunk},
+    deserialize,
     deserialize::{Deserialize, FileVersion, V1, V2, V3, V4, V50, V60, V70},
-    error::{Error, ErrorKind, ErrorStack},
+    error::ErrorStack,
     notes::Notes,
     on_version::OnVersion,
     revision_history::RevisionHistory,
-    typecode,
+    rollback::Rollback,
+    typecode::{self, Typecode},
 };
 use once_3dm_macros::Deserialize;
 use once_io::OStream;
