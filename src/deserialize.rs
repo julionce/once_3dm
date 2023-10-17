@@ -55,6 +55,20 @@ macro_rules! deserialize {
     };
 }
 
+impl<V> Deserialize<V> for ()
+where
+    V: FileVersion,
+{
+    type Error = ErrorStack;
+
+    fn deserialize<T>(_ostream: &mut T) -> Result<Self, Self::Error>
+    where
+        T: OStream,
+    {
+        Ok(())
+    }
+}
+
 macro_rules! impl_deserialize_for_num {
     ($type: ty) => {
         impl<V> Deserialize<V> for $type
