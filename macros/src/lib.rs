@@ -442,7 +442,7 @@ fn generate_field_deserializes(
                         let deserialize = match attrs.underlying_type {
                             Some(underlying_ty) => quote! {
                                 //TODO: improve deserialize! to allow #ty_str as parameter
-                                deserialize!(#underlying_ty, V, input, #ident_str)
+                                deserialize!(#underlying_ty, V, input, #ident_str).into()
                             },
                             None => quote! {
                                 deserialize!(#ty, V, input, #ident_str)
