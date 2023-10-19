@@ -12,6 +12,7 @@ pub mod converters;
 pub mod deserialize;
 pub mod error;
 pub mod header;
+pub mod mesh_parameters;
 pub mod notes;
 pub mod on_version;
 pub mod plugin;

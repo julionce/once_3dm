@@ -5,6 +5,7 @@ use crate::{
     deserialize,
     deserialize::{Deserialize, FileVersion},
     error::ErrorStack,
+    mesh_parameters::MeshParameters,
     plugin::PluginList,
     rollback::Rollback,
     typecode::{self, Typecode},
@@ -17,4 +18,6 @@ pub struct Settings {
     pub plugin_list: PluginList,
     #[field(SETTINGS_MODEL_URL)]
     pub model_url: String,
+    #[field(SETTINGS_RENDERMESH)]
+    pub render_mesh: MeshParameters,
 }
