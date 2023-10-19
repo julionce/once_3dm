@@ -12,6 +12,7 @@ pub enum ErrorKind {
     InvalidHeader,
     InvalidLengthUnitSystem,
     InvalidVersion,
+    InvalidSequenceLength,
     InvalidStringLength,
     IoError,
 }
@@ -31,6 +32,7 @@ impl ErrorKind {
             InvalidHeader => "invalid header",
             InvalidLengthUnitSystem => "invalid length unit system",
             InvalidVersion => "invalid version",
+            InvalidSequenceLength => "invalid sequence length",
             InvalidStringLength => "invalid string length",
             IoError => "IO error",
         }
