@@ -14,6 +14,7 @@ pub mod error;
 pub mod header;
 pub mod notes;
 pub mod on_version;
+pub mod plugin;
 pub mod properties;
 pub mod revision_history;
 pub mod rollback;
