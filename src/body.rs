@@ -9,12 +9,14 @@ use crate::{
     error::ErrorStack,
     properties::Properties,
     rollback::Rollback,
+    settings::Settings,
     typecode::{self, Typecode},
 };
 
 #[derive(Default)]
 pub struct Body {
     pub properties: Properties,
+    pub settings: Settings,
 }
 
 mod v1 {
@@ -34,6 +36,8 @@ mod v2 {
     pub struct Body {
         #[field(PROPERTIES_TABLE)]
         pub properties: Properties,
+        #[field(SETTINGS_TABLE)]
+        pub settings: Settings,
     }
 }
 
@@ -69,9 +73,9 @@ mod v70 {
 
 impl Into<Body> for v1::Body {
     fn into(self) -> Body {
-        Body {
-            properties: self.properties,
-        }
+        let mut body = Body::default();
+        body.properties = self.properties;
+        body
     }
 }
 
@@ -79,6 +83,7 @@ impl Into<Body> for v2::Body {
     fn into(self) -> Body {
         Body {
             properties: self.properties,
+            settings: self.settings,
         }
     }
 }

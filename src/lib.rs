@@ -18,6 +18,7 @@ pub mod properties;
 pub mod revision_history;
 pub mod rollback;
 pub mod sequence;
+pub mod settings;
 pub mod start_section;
 pub mod time;
 pub mod typecode;
