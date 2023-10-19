@@ -1,5 +1,6 @@
 pub type Typecode = u32;
 
+pub const NULL: Typecode = 0x00000000;
 pub const COMMENTBLOCK: Typecode = 0x00000001;
 pub const ENDOFFILE: Typecode = 0x00007FFF;
 pub const ENDOFFILE_GOO: Typecode = 0x00007FFE;
