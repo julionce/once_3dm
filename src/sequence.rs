@@ -1,8 +1,9 @@
 use std::marker::PhantomData;
 
 use crate::{
+    deserialize,
     deserialize::{Deserialize, FileVersion},
-    error::ErrorStack,
+    error::{Error, ErrorKind, ErrorStack},
 };
 
 pub struct Sequence<S, T> {
@@ -16,7 +17,6 @@ where
     S: Deserialize<V>,
     ErrorStack: From<<S as Deserialize<V>>::Error>,
     usize: TryFrom<S>,
-    ErrorStack: From<<usize as TryFrom<S>>::Error>,
     T: Deserialize<V>,
     ErrorStack: From<<T as Deserialize<V>>::Error>,
 {
@@ -26,10 +26,17 @@ where
     where
         U: once_io::OStream,
     {
-        let len = S::deserialize(ostream)?.try_into()?;
+        let len = match deserialize!(S, V, ostream, "length").try_into() {
+            Ok(ok) => ok,
+            Err(_) => {
+                let mut stack = ErrorStack::new(Error::Simple(ErrorKind::InvalidSequenceLength));
+                stack.push_frame("length", std::any::type_name::<S>());
+                return Err(stack);
+            }
+        };
         let mut data: Vec<T> = vec![];
         for _ in 0..len {
-            data.push(T::deserialize(ostream)?);
+            data.push(deserialize!(T, V, ostream, "member"));
         }
         Ok(Self {
             inner: data,
