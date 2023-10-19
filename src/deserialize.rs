@@ -106,6 +106,22 @@ impl_deserialize_for_num! {isize}
 impl_deserialize_for_num! {f32}
 impl_deserialize_for_num! {f64}
 
+impl<V> Deserialize<V> for bool
+where
+    V: FileVersion,
+{
+    type Error = ErrorStack;
+
+    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    where
+        T: OStream,
+    {
+        //TODO: check if values distinct from 0 or 1 are valid.
+        let inner = deserialize!(u8, V, ostream)?;
+        Ok(0 < inner)
+    }
+}
+
 impl Deserialize<V1> for String {
     type Error = ErrorStack;
 
