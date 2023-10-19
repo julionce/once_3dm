@@ -177,7 +177,10 @@ impl FieldAttrs {
     }
 
     fn parse_typecode(attrs: &Vec<syn::Attribute>) -> Option<syn::Type> {
-        match attrs.iter().find(|attr| attr.path.is_ident("field")) {
+        match attrs
+            .iter()
+            .find(|attr| attr.path.is_ident("field") || attr.path.is_ident("in_chunk"))
+        {
             Some(attr) => Some(attr.parse_args::<syn::Type>().unwrap()),
             None => None,
         }
@@ -206,6 +209,7 @@ impl FieldAttrs {
     attributes(
         table,
         field,
+        in_chunk,
         with_version,
         if_major_version,
         if_minor_version,
@@ -279,7 +283,7 @@ fn generate_chunk_trait_bounds_deserialize(struct_attrs: &StructAttrs) -> TokenS
             chunk::Begin: Deserialize<V>,
             ErrorStack: From<<chunk::Begin as Deserialize<V>>::Error>,
         },
-        false => quote!(),
+        false => quote! {},
     };
     let with_version_trait_bounds = match struct_attrs.with_version {
         WithVersion::Big => quote! {
@@ -317,9 +321,21 @@ fn generate_type_trait_bounds_deserialize(fields: &syn::Fields) -> Vec<TokenStre
                         _ => panic!(),
                     },
                 };
-                quote! {
-                    #ty: Deserialize<V>,
-                    ErrorStack: From<<#ty as Deserialize<V>>::Error>,
+                match attrs.typecode {
+                    Some(_) => {
+                        quote! {
+                            chunk::Begin: Deserialize<V>,
+                            ErrorStack: From<<chunk::Begin as Deserialize<V>>::Error>,
+                            #ty: Deserialize<V>,
+                            ErrorStack: From<<#ty as Deserialize<V>>::Error>,
+                        }
+                    }
+                    None => {
+                        quote! {
+                            #ty: Deserialize<V>,
+                            ErrorStack: From<<#ty as Deserialize<V>>::Error>,
+                        }
+                    }
                 }
             })
             .collect::<Vec<TokenStream2>>(),
@@ -372,7 +388,6 @@ fn generate_body_core_deserialize(
         }
         false => {
             quote! {
-                let input = ostream;
                 Ok(Self {#(#field_deserializes),*})
             }
         }
@@ -393,7 +408,7 @@ fn generate_version_deserialize(with_version: &WithVersion) -> TokenStream2 {
 
 fn generate_padding_deserialize(field_attrs: &FieldAttrs) -> TokenStream2 {
     match &field_attrs.padding.as_ref() {
-        Some(ty) => quote!(deserialize!(#ty, V, input, "padding");),
+        Some(ty) => quote!(deserialize!(#ty, V, ostream, "padding");),
         None => quote!(),
     }
 }
@@ -421,10 +436,9 @@ fn generate_field_deserializes(
                 let attrs = FieldAttrs::parse(raw_field);
                 let padding_deserialize = generate_padding_deserialize(&attrs);
                 let if_version_conditions = generate_if_version_condition(&attrs.if_version);
-                match struct_attrs.table.0 {
-                    true => {
-                        let typecode = attrs.typecode.as_ref().unwrap();
-                        let deserialize = match attrs.underlying_type {
+                let deserialize = match &attrs.typecode {
+                    Some(typecode) => {
+                        match &attrs.underlying_type {
                             Some(underlying_ty) => quote! {
                                 //TODO: improve deserialize! to allow #ty_str as parameter
                                 deserialize!(Chunk<{typecode::#typecode}, #underlying_ty>, V, ostream, #ident_str).inner.into()
@@ -432,7 +446,23 @@ fn generate_field_deserializes(
                             None => quote! {
                                 deserialize!(Chunk<{typecode::#typecode}, #ty>, V, ostream, #ident_str).inner
                             },
-                        };
+                        }
+                    }
+                    None => {
+                        match &attrs.underlying_type {
+                            Some(underlying_ty) => quote! {
+                                //TODO: improve deserialize! to allow #ty_str as parameter
+                                deserialize!(#underlying_ty, V, ostream, #ident_str).into()
+                            },
+                            None => quote! {
+                                deserialize!(#ty, V, ostream, #ident_str)
+                            },
+                        }
+                    }
+                };
+                match struct_attrs.table.0 {
+                    true => {
+                        let typecode = attrs.typecode.as_ref().unwrap();
                         quote!(
                             typecode::#typecode => {
                                 if #if_version_conditions {
@@ -443,15 +473,6 @@ fn generate_field_deserializes(
                         )
                     }
                     false => {
-                        let deserialize = match attrs.underlying_type {
-                            Some(underlying_ty) => quote! {
-                                //TODO: improve deserialize! to allow #ty_str as parameter
-                                deserialize!(#underlying_ty, V, input, #ident_str).into()
-                            },
-                            None => quote! {
-                                deserialize!(#ty, V, input, #ident_str)
-                            },
-                        };
                         quote! {
                             #ident: {
                                 if #if_version_conditions {
