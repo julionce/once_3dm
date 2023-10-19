@@ -354,12 +354,16 @@ fn generate_body_core_deserialize(
                     let typecode = deserialize!(Rollback<Typecode>, V, ostream, "typecode").inner;
                     match typecode {
                         #(#field_deserializes)*
-                        typecode::ENDOFTABLE | typecode::ENDOFFILE => {
-                            deserialize!(Chunk<()>, V, ostream)?;
+                        typecode::ENDOFFILE => {
+                            deserialize!(Chunk<{typecode::ENDOFFILE}, ()>, V, ostream, "end_of_file");
+                            break;
+                        }
+                        typecode::ENDOFTABLE => {
+                            deserialize!(Chunk<{typecode::ENDOFTABLE}, ()>, V, ostream, "end_of_table");
                             break;
                         }
                         _ => {
-                            deserialize!(Chunk<()>, V, ostream)?;
+                            deserialize!(Chunk<{typecode::NULL}, ()>, V, ostream, "unknown");
                         }
                     }
                 }
@@ -419,16 +423,16 @@ fn generate_field_deserializes(
                 let if_version_conditions = generate_if_version_condition(&attrs.if_version);
                 match struct_attrs.table.0 {
                     true => {
+                        let typecode = attrs.typecode.as_ref().unwrap();
                         let deserialize = match attrs.underlying_type {
                             Some(underlying_ty) => quote! {
                                 //TODO: improve deserialize! to allow #ty_str as parameter
-                                deserialize!(Chunk<#underlying_ty>, V, ostream, #ident_str).inner.into()
+                                deserialize!(Chunk<{typecode::#typecode}, #underlying_ty>, V, ostream, #ident_str).inner.into()
                             },
                             None => quote! {
-                                deserialize!(Chunk<#ty>, V, ostream, #ident_str).inner
+                                deserialize!(Chunk<{typecode::#typecode}, #ty>, V, ostream, #ident_str).inner
                             },
                         };
-                        let typecode = attrs.typecode.as_ref().unwrap();
                         quote!(
                             typecode::#typecode => {
                                 if #if_version_conditions {

@@ -137,11 +137,11 @@ impl Deserialize<V70> for Begin {
     }
 }
 
-pub struct Chunk<T> {
+pub struct Chunk<const TC: Typecode, T> {
     pub inner: T,
 }
 
-impl<T, V> Deserialize<V> for Chunk<T>
+impl<const TC: Typecode, T, V> Deserialize<V> for Chunk<TC, T>
 where
     V: FileVersion,
     Begin: Deserialize<V>,
@@ -156,15 +156,21 @@ where
         S: OStream,
     {
         let begin = deserialize!(Begin, V, ostream, "begin");
-        let chunk = &mut ostream.ochunk(Some(begin.length));
-        let ret = Self {
-            inner: deserialize!(T, V, chunk, "inner"),
-        };
-        match chunk.seek(SeekFrom::End(0)) {
-            Ok(_) => (),
-            Err(e) => return Err(ErrorStack::new(Error::IoError(e))),
+        if TC == typecode::NULL || TC == begin.typecode {
+            let chunk = &mut ostream.ochunk(Some(begin.length));
+            let ret = Self {
+                inner: deserialize!(T, V, chunk, "inner"),
+            };
+            match chunk.seek(SeekFrom::End(0)) {
+                Ok(_) => (),
+                Err(e) => return Err(ErrorStack::new(Error::IoError(e))),
+            }
+            Ok(ret)
+        } else {
+            Err(ErrorStack::new(Error::Simple(
+                ErrorKind::InvalidChunkTypecode,
+            )))
         }
-        Ok(ret)
     }
 }
 
