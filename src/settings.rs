@@ -9,6 +9,7 @@ use crate::{
     plugin::PluginList,
     rollback::Rollback,
     typecode::{self, Typecode},
+    units_and_tolerances::UnitsAndTolerances,
 };
 
 #[derive(Default, Deserialize)]
@@ -20,4 +21,6 @@ pub struct Settings {
     pub model_url: String,
     #[field(SETTINGS_RENDERMESH)]
     pub render_mesh: MeshParameters,
+    #[field(SETTINGS_UNITSANDTOLS)]
+    pub units_and_tolerances: UnitsAndTolerances,
 }
