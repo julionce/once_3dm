@@ -6,7 +6,7 @@ use crate::{
     deserialize::{Deserialize, FileVersion},
     error::ErrorStack,
     sequence::Sequence,
-    typecode,
+    type_code::TypeCode,
     uuid::Uuid,
 };
 
@@ -44,7 +44,7 @@ pub struct Plugin {
 
 #[derive(Default, Deserialize)]
 pub struct PluginRef {
-    #[in_chunk(ANONYMOUS_CHUNK)]
+    #[in_chunk(AnonymousChunk)]
     pub plugin: Plugin,
 }
 

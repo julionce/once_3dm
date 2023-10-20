@@ -2,7 +2,7 @@ use crate::{
     chunk, deserialize,
     deserialize::{Deserialize, FileVersion},
     error::{Error, ErrorKind, ErrorStack},
-    typecode,
+    type_code::TypeCode,
 };
 
 use once_io::OStream;
@@ -45,8 +45,8 @@ where
             }
             1u8 => {
                 let begin = deserialize!(chunk::Begin, V, ostream, "begin");
-                match begin.typecode {
-                    typecode::ANONYMOUS_CHUNK => {
+                match begin.type_code {
+                    TypeCode::AnonymousChunk => {
                         let limit = begin.length.checked_sub(4);
                         match limit {
                             Some(v) => {
@@ -64,7 +64,7 @@ where
                         }
                     }
                     _ => Err(ErrorStack::new(Error::Simple(
-                        ErrorKind::InvalidChunkTypecode,
+                        ErrorKind::InvalidChunkTypeCode,
                     ))),
                 }
             }

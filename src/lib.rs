@@ -23,7 +23,7 @@ pub mod sequence;
 pub mod settings;
 pub mod start_section;
 pub mod time;
-pub mod typecode;
+pub mod type_code;
 pub mod units_and_tolerances;
 pub mod uuid;
 pub mod version;

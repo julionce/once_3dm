@@ -9,7 +9,7 @@ use crate::{
     on_version::OnVersion,
     revision_history::RevisionHistory,
     rollback::Rollback,
-    typecode::{self, Typecode},
+    type_code::TypeCode,
 };
 use once_3dm_macros::Deserialize;
 use once_io::OStream;
@@ -58,21 +58,21 @@ mod v1 {
             loop {
                 let begin = deserialize!(chunk::Begin, V, ostream, "begin");
                 let input = &mut ostream.ochunk(Some(begin.length));
-                match begin.typecode {
-                    typecode::SUMMARY => {
+                match begin.type_code {
+                    TypeCode::Summary => {
                         properties.revision_history =
                             Some(deserialize!(RevisionHistory, V, input, "revision_history"));
                         input.seek(SeekFrom::End(0)).unwrap();
                     }
-                    typecode::NOTES => {
+                    TypeCode::Notes => {
                         properties.notes = Some(deserialize!(Notes, V, input, "notes"));
                         input.seek(SeekFrom::End(0)).unwrap();
                     }
-                    typecode::BITMAPPREVIEW => {
+                    TypeCode::BitmapPreview => {
                         properties.preview = Some(deserialize!(Bitmap, V, input, "preview"));
                         input.seek(SeekFrom::End(0)).unwrap();
                     }
-                    typecode::CURRENTLAYER | typecode::LAYER => {
+                    TypeCode::CurrentLayer | TypeCode::Layer => {
                         input.seek(SeekFrom::End(0)).unwrap();
                         break;
                     }
@@ -99,20 +99,20 @@ mod v2 {
     #[derive(Default, Deserialize)]
     #[table]
     pub struct Properties {
-        #[field(PROPERTIES_AS_FILE_NAME)]
+        #[field(PropertiesAsFileName)]
         pub filename: String,
-        #[field(PROPERTIES_NOTES)]
+        #[field(PropertiesNotes)]
         pub notes: Notes,
-        #[field(PROPERTIES_REVISIONHISTORY)]
+        #[field(PropertiesRevisionHistory)]
         pub revision_history: RevisionHistory,
-        #[field(PROPERTIES_APPLICATION)]
+        #[field(PropertiesApplication)]
         pub application: Application,
-        #[field(PROPERTIES_PREVIEWIMAGE)]
+        #[field(PropertiesPreviewImage)]
         pub preview_image: Bitmap,
-        #[field(PROPERTIES_COMPRESSED_PREVIEWIMAGE)]
+        #[field(PropertiesCompressedPreviewImage)]
         #[underlying_type(CompressedBitmap)]
         pub compresed_preview_image: Bitmap,
-        #[field(PROPERTIES_OPENNURBS_VERSION)]
+        #[field(PropertiesOpenNurbsVersion)]
         pub on_version: OnVersion,
     }
 }

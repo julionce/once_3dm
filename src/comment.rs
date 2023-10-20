@@ -6,7 +6,7 @@ use crate::{
     deserialize,
     deserialize::{Deserialize, FileVersion},
     error::{Error, ErrorKind, ErrorStack},
-    typecode,
+    type_code::TypeCode,
 };
 
 pub struct Comment(String);
@@ -30,7 +30,7 @@ where
         T: OStream,
     {
         let begin = deserialize!(Begin, V, ostream, "begin");
-        if typecode::COMMENTBLOCK == begin.typecode {
+        if TypeCode::CommentBlock == begin.type_code {
             let mut chunk = ostream.ochunk(Some(begin.length));
             let mut string = String::new();
             match chunk.read_to_string(&mut string) {
@@ -39,7 +39,7 @@ where
             }
         } else {
             Err(ErrorStack::new(Error::Simple(
-                ErrorKind::InvalidChunkTypecode,
+                ErrorKind::InvalidChunkTypeCode,
             )))
         }
     }

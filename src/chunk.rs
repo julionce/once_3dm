@@ -7,11 +7,11 @@ use crate::{
     deserialize,
     deserialize::{Deserialize, FileVersion, V1, V2, V3, V4, V50, V60, V70},
     error::{Error, ErrorKind, ErrorStack},
-    typecode::{self, Typecode},
+    type_code::TypeCode,
 };
 
 pub struct Begin {
-    pub typecode: Typecode,
+    pub type_code: TypeCode,
     pub length: u64,
 }
 
@@ -22,20 +22,22 @@ impl Deserialize<V1> for Begin {
     where
         T: once_io::OStream,
     {
-        let typecode = deserialize!(Typecode, V1, ostream, "typecode");
-        let is_unsigned = 0 == (typecode::SHORT & typecode)
-            || typecode::RGB == typecode
-            || typecode::RGBDISPLAY == typecode
-            || typecode::PROPERTIES_OPENNURBS_VERSION == typecode
-            || typecode::OBJECT_RECORD_TYPE == typecode;
+        let type_code = deserialize!(TypeCode, V1, ostream, "type_code");
+        let is_unsigned = 0 == (TypeCode::Short as u32 & type_code as u32)
+            || TypeCode::Rgb == type_code
+            || TypeCode::RgbDisplay == type_code
+            || TypeCode::PropertiesOpenNurbsVersion == type_code
+            || TypeCode::ObjectRecordType == type_code;
         let value = if is_unsigned {
             deserialize!(u32, V1, ostream, "length") as i64
         } else {
             deserialize!(i32, V1, ostream, "length") as i64
         };
-        let is_long = (0 == typecode & typecode::SHORT) && (0 != typecode) && (0 < value);
+        let is_long = (0 == type_code as u32 & TypeCode::Short as u32)
+            && (0 != type_code as u32)
+            && (0 < value);
         let length = if is_long { value as u64 } else { 0u64 };
-        Ok(Begin { typecode, length })
+        Ok(Begin { type_code, length })
     }
 }
 
@@ -47,25 +49,25 @@ impl Deserialize<V2> for Begin {
     where
         T: once_io::OStream,
     {
-        let typecode = deserialize!(Typecode, V2, ostream, "typecode");
-        if typecode::PROPERTIES_OPENNURBS_VERSION == typecode {
+        let type_code = deserialize!(TypeCode, V2, ostream, "type_code");
+        if TypeCode::PropertiesOpenNurbsVersion == type_code {
             Ok(Begin {
-                typecode,
+                type_code,
                 length: 4u64,
             })
         } else {
-            let is_unsigned = 0 == (typecode::SHORT & typecode)
-                || typecode::RGB == typecode
-                || typecode::RGBDISPLAY == typecode
-                || typecode::OBJECT_RECORD_TYPE == typecode;
+            let is_unsigned = 0 == (TypeCode::Short as u32 & type_code as u32)
+                || TypeCode::Rgb == type_code
+                || TypeCode::RgbDisplay == type_code
+                || TypeCode::ObjectRecordType == type_code;
             let value = if is_unsigned {
                 deserialize!(u32, V2, ostream, "length") as i64
             } else {
                 deserialize!(i32, V2, ostream, "length") as i64
             };
-            let is_long = (0 == typecode & typecode::SHORT) && (0 < value);
+            let is_long = (0 == type_code as u32 & TypeCode::Short as u32) && (0 < value);
             let length = if is_long { value as u64 } else { 0u64 };
-            Ok(Begin { typecode, length })
+            Ok(Begin { type_code, length })
         }
     }
 }
@@ -100,17 +102,17 @@ impl Deserialize<V50> for Begin {
     where
         T: once_io::OStream,
     {
-        let typecode = deserialize!(Typecode, V50, ostream, "typecode");
-        if typecode::PROPERTIES_OPENNURBS_VERSION == typecode {
+        let type_code = deserialize!(TypeCode, V50, ostream, "type_code");
+        if TypeCode::PropertiesOpenNurbsVersion == type_code {
             Ok(Begin {
-                typecode,
+                type_code,
                 length: 8u64,
             })
         } else {
             let value = deserialize!(u64, V50, ostream, "value");
-            let is_long = (0 == typecode & typecode::SHORT) && (0 < value);
+            let is_long = (0 == type_code as u32 & TypeCode::Short as u32) && (0 < value);
             let length = if is_long { value as u64 } else { 0u64 };
-            Ok(Begin { typecode, length })
+            Ok(Begin { type_code, length })
         }
     }
 }
@@ -137,11 +139,11 @@ impl Deserialize<V70> for Begin {
     }
 }
 
-pub struct Chunk<const TC: Typecode, T> {
+pub struct Chunk<const TC: u32, T> {
     pub inner: T,
 }
 
-impl<const TC: Typecode, T, V> Deserialize<V> for Chunk<TC, T>
+impl<const TC: u32, T, V> Deserialize<V> for Chunk<TC, T>
 where
     V: FileVersion,
     Begin: Deserialize<V>,
@@ -156,7 +158,7 @@ where
         S: OStream,
     {
         let begin = deserialize!(Begin, V, ostream, "begin");
-        if TC == typecode::NULL || TC == begin.typecode {
+        if TC == TypeCode::Null as u32 || TC == begin.type_code as u32 {
             let chunk = &mut ostream.ochunk(Some(begin.length));
             let ret = Self {
                 inner: deserialize!(T, V, chunk, "inner"),
@@ -168,7 +170,7 @@ where
             Ok(ret)
         } else {
             Err(ErrorStack::new(Error::Simple(
-                ErrorKind::InvalidChunkTypecode,
+                ErrorKind::InvalidChunkTypeCode,
             )))
         }
     }

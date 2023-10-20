@@ -160,7 +160,7 @@ impl TableAttr {
 }
 
 struct FieldAttrs {
-    typecode: Option<syn::Type>,
+    type_code: Option<syn::Type>,
     padding: Option<syn::Type>,
     underlying_type: Option<syn::Type>,
     if_version: IfVersion,
@@ -169,14 +169,14 @@ struct FieldAttrs {
 impl FieldAttrs {
     fn parse(field: &syn::Field) -> Self {
         Self {
-            typecode: Self::parse_typecode(&field.attrs),
+            type_code: Self::parse_type_code(&field.attrs),
             padding: Self::parse_padding(&field.attrs),
             underlying_type: Self::parse_underlying_type(&field.attrs),
             if_version: IfVersion::parse(&field.attrs),
         }
     }
 
-    fn parse_typecode(attrs: &Vec<syn::Attribute>) -> Option<syn::Type> {
+    fn parse_type_code(attrs: &Vec<syn::Attribute>) -> Option<syn::Type> {
         match attrs
             .iter()
             .find(|attr| attr.path.is_ident("field") || attr.path.is_ident("in_chunk"))
@@ -321,7 +321,7 @@ fn generate_type_trait_bounds_deserialize(fields: &syn::Fields) -> Vec<TokenStre
                         _ => panic!(),
                     },
                 };
-                match attrs.typecode {
+                match attrs.type_code {
                     Some(_) => {
                         quote! {
                             chunk::Begin: Deserialize<V>,
@@ -367,19 +367,19 @@ fn generate_body_core_deserialize(
             quote! {
                 let mut table = Self::default();
                 loop {
-                    let typecode = deserialize!(Rollback<Typecode>, V, ostream, "typecode").inner;
-                    match typecode {
+                    let type_code = deserialize!(Rollback<TypeCode>, V, ostream, "type_code").inner;
+                    match type_code {
                         #(#field_deserializes)*
-                        typecode::ENDOFFILE => {
-                            deserialize!(Chunk<{typecode::ENDOFFILE}, ()>, V, ostream, "end_of_file");
+                        TypeCode::EndOfFile => {
+                            deserialize!(Chunk<{TypeCode::EndOfFile as u32}, ()>, V, ostream, "end_of_file");
                             break;
                         }
-                        typecode::ENDOFTABLE => {
-                            deserialize!(Chunk<{typecode::ENDOFTABLE}, ()>, V, ostream, "end_of_table");
+                        TypeCode::EndOfTable => {
+                            deserialize!(Chunk<{TypeCode::EndOfTable as u32}, ()>, V, ostream, "end_of_table");
                             break;
                         }
                         _ => {
-                            deserialize!(Chunk<{typecode::NULL}, ()>, V, ostream, "unknown");
+                            deserialize!(Chunk<{TypeCode::Null as u32}, ()>, V, ostream, "unknown");
                         }
                     }
                 }
@@ -436,15 +436,15 @@ fn generate_field_deserializes(
                 let attrs = FieldAttrs::parse(raw_field);
                 let padding_deserialize = generate_padding_deserialize(&attrs);
                 let if_version_conditions = generate_if_version_condition(&attrs.if_version);
-                let deserialize = match &attrs.typecode {
-                    Some(typecode) => {
+                let deserialize = match &attrs.type_code {
+                    Some(type_code) => {
                         match &attrs.underlying_type {
                             Some(underlying_ty) => quote! {
                                 //TODO: improve deserialize! to allow #ty_str as parameter
-                                deserialize!(Chunk<{typecode::#typecode}, #underlying_ty>, V, ostream, #ident_str).inner.into()
+                                deserialize!(Chunk<{TypeCode::#type_code as u32}, #underlying_ty>, V, ostream, #ident_str).inner.into()
                             },
                             None => quote! {
-                                deserialize!(Chunk<{typecode::#typecode}, #ty>, V, ostream, #ident_str).inner
+                                deserialize!(Chunk<{TypeCode::#type_code as u32}, #ty>, V, ostream, #ident_str).inner
                             },
                         }
                     }
@@ -462,9 +462,9 @@ fn generate_field_deserializes(
                 };
                 match struct_attrs.table.0 {
                     true => {
-                        let typecode = attrs.typecode.as_ref().unwrap();
+                        let type_code = attrs.type_code.as_ref().unwrap();
                         quote!(
-                            typecode::#typecode => {
+                            TypeCode::#type_code => {
                                 if #if_version_conditions {
                                     #padding_deserialize
                                     table.#ident = #deserialize;

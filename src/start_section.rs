@@ -6,7 +6,7 @@ use crate::{
     chunk, deserialize,
     deserialize::{Deserialize, V1},
     error::ErrorStack,
-    typecode::{self},
+    type_code::TypeCode,
     version::Version,
 };
 
@@ -25,24 +25,24 @@ impl Deserialize<V1> for StartSection {
         let mut version = Version::V1;
         loop {
             let begin = deserialize!(chunk::Begin, V1, ostream, "begin");
-            match begin.typecode {
-                typecode::SUMMARY
-                | typecode::BITMAPPREVIEW
-                | typecode::UNIT_AND_TOLERANCES
-                | typecode::VIEWPORT
-                | typecode::LAYER
-                | typecode::RENDERMESHPARAMS
-                | typecode::CURRENTLAYER
-                | typecode::ANNOTATION_SETTINGS
-                | typecode::NOTES
-                | typecode::NAMED_CPLANE
-                | typecode::NAMED_VIEW => {
+            match begin.type_code {
+                TypeCode::Summary
+                | TypeCode::BitmapPreview
+                | TypeCode::UnitsAndTolerances
+                | TypeCode::Viewport
+                | TypeCode::Layer
+                | TypeCode::RenderMeshParams
+                | TypeCode::CurrentLayer
+                | TypeCode::AnnotationSettings
+                | TypeCode::Notes
+                | TypeCode::NamedCPlane
+                | TypeCode::NamedView => {
                     ostream
                         .seek(SeekFrom::Current(begin.length as i64))
                         .unwrap();
                 }
                 _ => {
-                    if typecode::TABLE == begin.typecode & 0xFFFF0000 {
+                    if TypeCode::Table as u32 == begin.type_code as u32 & 0xFFFF0000 {
                         version = Version::V2
                     }
                     break;

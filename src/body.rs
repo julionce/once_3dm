@@ -10,7 +10,7 @@ use crate::{
     properties::Properties,
     rollback::Rollback,
     settings::Settings,
-    typecode::{self, Typecode},
+    type_code::TypeCode,
 };
 
 #[derive(Default)]
@@ -34,9 +34,9 @@ mod v2 {
     #[derive(Default, Deserialize)]
     #[table]
     pub struct Body {
-        #[field(PROPERTIES_TABLE)]
+        #[field(PropertiesTable)]
         pub properties: Properties,
-        #[field(SETTINGS_TABLE)]
+        #[field(SettingsTable)]
         pub settings: Settings,
     }
 }

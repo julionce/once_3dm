@@ -8,19 +8,19 @@ use crate::{
     mesh_parameters::MeshParameters,
     plugin::PluginList,
     rollback::Rollback,
-    typecode::{self, Typecode},
+    type_code::TypeCode,
     units_and_tolerances::UnitsAndTolerances,
 };
 
 #[derive(Default, Deserialize)]
 #[table]
 pub struct Settings {
-    #[field(SETTINGS_PLUGINLIST)]
+    #[field(SettingsPluginList)]
     pub plugin_list: PluginList,
-    #[field(SETTINGS_MODEL_URL)]
+    #[field(SettingsModelUrl)]
     pub model_url: String,
-    #[field(SETTINGS_RENDERMESH)]
+    #[field(SettingsRenderMesh)]
     pub render_mesh: MeshParameters,
-    #[field(SETTINGS_UNITSANDTOLS)]
+    #[field(SettingsUnitsAndTolerances)]
     pub units_and_tolerances: UnitsAndTolerances,
 }

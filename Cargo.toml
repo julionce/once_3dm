@@ -6,5 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+num_enum = "0.7.0"
 once_3dm_macros = { path = "./macros" }
 once_io = { git = "https://github.com/julionce/once_io" }
