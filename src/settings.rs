@@ -19,8 +19,10 @@ pub struct Settings {
     pub plugin_list: PluginList,
     #[field(SettingsModelUrl)]
     pub model_url: String,
-    #[field(SettingsRenderMesh)]
-    pub render_mesh: MeshParameters,
     #[field(SettingsUnitsAndTolerances)]
     pub units_and_tolerances: UnitsAndTolerances,
+    #[field(SettingsRenderMesh)]
+    pub render_mesh: MeshParameters,
+    #[field(SettingsAnalysisMesh)]
+    pub analysis_mesh: MeshParameters,
 }
