@@ -6,6 +6,7 @@ pub mod archive;
 pub mod bitmap;
 pub mod body;
 pub mod chunk;
+pub mod color;
 pub mod comment;
 pub mod compressed_buffer;
 pub mod converters;
