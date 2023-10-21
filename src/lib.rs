@@ -17,6 +17,7 @@ pub mod mesh_parameters;
 pub mod notes;
 pub mod on_version;
 pub mod plugin;
+pub mod point;
 pub mod properties;
 pub mod revision_history;
 pub mod rollback;
