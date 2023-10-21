@@ -5,6 +5,7 @@ pub mod application;
 pub mod archive;
 pub mod bitmap;
 pub mod body;
+pub mod bounding_box;
 pub mod chunk;
 pub mod color;
 pub mod comment;
