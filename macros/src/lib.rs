@@ -318,6 +318,10 @@ fn generate_type_trait_bounds_deserialize(fields: &syn::Fields) -> Vec<TokenStre
                         syn::Type::Path(value) => {
                             quote!(#value)
                         }
+                        syn::Type::Tuple(value) => match value.elems.len() {
+                            0 => quote!(#value),
+                            _ => panic!(),
+                        },
                         _ => panic!(),
                     },
                 };
@@ -430,6 +434,10 @@ fn generate_field_deserializes(
                     syn::Type::Path(value) => {
                         quote!(#value)
                     }
+                    syn::Type::Tuple(value) => match value.elems.len() {
+                        0 => quote!(#value),
+                        _ => panic!(),
+                    },
                     _ => panic!(),
                 };
                 let ident_str = ident.to_string();
