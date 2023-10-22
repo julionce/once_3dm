@@ -6,7 +6,7 @@ use crate::{
     error::ErrorStack,
 };
 
-#[derive(Default, Deserialize)]
+#[derive(Default, Deserialize, PartialEq, Eq)]
 pub struct Uuid {
     pub data1: u32,
     pub data2: u16,
