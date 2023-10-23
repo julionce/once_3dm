@@ -176,6 +176,44 @@ where
     }
 }
 
+//TODO: remove when https://github.com/rust-lang/rust/issues/37748 is fixed.
+pub struct ChunkInStream<const TC: u32, T> {
+    pub inner: T,
+}
+
+impl<const TC: u32, T, V> Deserialize<V> for ChunkInStream<TC, T>
+where
+    V: FileVersion,
+    Begin: Deserialize<V>,
+    ErrorStack: From<<Begin as Deserialize<V>>::Error>,
+    T: Deserialize<V>,
+    ErrorStack: From<<T as Deserialize<V>>::Error>,
+{
+    type Error = ErrorStack;
+
+    fn deserialize<S>(ostream: &mut S) -> Result<Self, Self::Error>
+    where
+        S: OStream,
+    {
+        let begin = deserialize!(Begin, V, ostream, "begin");
+        let final_position = ostream.stream_position().unwrap() + begin.length;
+        if TC == TypeCode::Null as u32 || TC == begin.type_code as u32 {
+            let ret = Self {
+                inner: deserialize!(T, V, ostream, "inner"),
+            };
+            match ostream.seek(SeekFrom::Start(final_position)) {
+                Ok(_) => (),
+                Err(e) => return Err(ErrorStack::new(Error::IoError(e))),
+            }
+            Ok(ret)
+        } else {
+            Err(ErrorStack::new(Error::Simple(
+                ErrorKind::InvalidChunkTypeCode,
+            )))
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct BigVersion {
     pub major: u8,
