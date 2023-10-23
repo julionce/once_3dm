@@ -29,6 +29,8 @@ mod v1 {
 }
 
 mod v2 {
+    use crate::object;
+
     use super::*;
 
     #[derive(Default, Deserialize)]
@@ -38,6 +40,8 @@ mod v2 {
         pub properties: Properties,
         #[field(SettingsTable)]
         pub settings: Settings,
+        #[field(ObjectTable)]
+        pub object_table: object::Table,
     }
 }
 

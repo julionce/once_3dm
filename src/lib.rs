@@ -17,6 +17,7 @@ pub mod header;
 pub mod mesh_parameters;
 pub mod notes;
 pub mod nurbs_curve;
+pub mod object;
 pub mod on_version;
 pub mod plugin;
 pub mod point;
