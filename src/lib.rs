@@ -31,4 +31,5 @@ pub mod time;
 pub mod type_code;
 pub mod units_and_tolerances;
 pub mod uuid;
+pub mod vector;
 pub mod version;
