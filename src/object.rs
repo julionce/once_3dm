@@ -5,6 +5,7 @@ use crate::{
     deserialize,
     deserialize::{Deserialize, FileVersion},
     error::{Error, ErrorKind, ErrorStack},
+    nurbs_curve::NurbsCurve,
     rollback::Rollback,
     type_code::TypeCode,
     uuid::Uuid,
@@ -148,8 +149,16 @@ impl TryInto<Kind> for Uuid {
 }
 
 #[derive(Default)]
+pub enum Data {
+    #[default]
+    Empty,
+    NurbsCurve(NurbsCurve),
+}
+
+#[derive(Default)]
 pub struct Class {
     pub uuid: Uuid,
+    pub data: Data,
 }
 
 impl<V> Deserialize<V> for Class
