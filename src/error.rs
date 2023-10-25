@@ -16,6 +16,7 @@ pub enum ErrorKind {
     InvalidSequenceLength,
     InvalidStringLength,
     IoError,
+    UnknownObjectId,
 }
 
 impl ErrorKind {
@@ -37,6 +38,7 @@ impl ErrorKind {
             InvalidSequenceLength => "invalid sequence length",
             InvalidStringLength => "invalid string length",
             IoError => "IO error",
+            UnknownObjectId => "Unknown object Id",
         }
     }
 }
