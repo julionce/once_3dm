@@ -15,3 +15,24 @@ pub struct Point {
     pub y: f64,
     pub z: f64,
 }
+
+#[derive(Default, Deserialize)]
+pub struct Point2D {
+    pub x: f64,
+    pub y: f64,
+}
+
+#[derive(Default, Deserialize)]
+pub struct Point3D {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
+}
+
+#[derive(Default, Deserialize)]
+pub struct Point4D {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
+    pub w: f64,
+}
