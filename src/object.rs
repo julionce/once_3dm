@@ -1,7 +1,8 @@
+use num_enum::TryFromPrimitive;
 use once_3dm_macros::Deserialize;
 
 use crate::{
-    chunk::{self, Chunk},
+    chunk::{self, Chunk, ChunkInStream},
     deserialize,
     deserialize::{Deserialize, FileVersion},
     error::{Error, ErrorKind, ErrorStack},
@@ -123,6 +124,8 @@ const SUM_SURFACE_TL_ID: Uuid = Uuid {
     data4: [0x81, 0xD0, 0xB5, 0xEE, 0xBD, 0x9B, 0x54, 0x17],
 };
 
+#[derive(TryFromPrimitive)]
+#[repr(u8)]
 pub enum Kind {
     NurbsCurve,
     NurbsSurface,
@@ -174,13 +177,29 @@ where
         T: once_io::OStream,
     {
         let mut class = Class::default();
-        class.uuid = deserialize!(
+        let uuid = deserialize!(
             Chunk::<{ TypeCode::OpenNurbsClassUuid as u32 }, Uuid>,
             V,
             ostream,
             "uuid"
         )
         .inner;
+        class.data = match TryInto::<Kind>::try_into(uuid) {
+            Ok(kind) => match kind {
+                Kind::NurbsCurve => Data::NurbsCurve(
+                    deserialize!(
+                        ChunkInStream::<{ TypeCode::OpenNurbsClassData as u32 }, NurbsCurve>,
+                        V,
+                        ostream
+                    )?
+                    .inner,
+                ),
+                _ => Data::default(),
+            },
+            Err(e) => {
+                return Err(ErrorStack::new(e));
+            }
+        };
         Ok(class)
     }
 }
