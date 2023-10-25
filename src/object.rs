@@ -147,10 +147,41 @@ impl TryInto<Kind> for Uuid {
     }
 }
 
+#[derive(Default)]
+pub struct Class {
+    pub uuid: Uuid,
+}
+
+impl<V> Deserialize<V> for Class
+where
+    V: FileVersion,
+    chunk::Begin: Deserialize<V>,
+    ErrorStack: From<<chunk::Begin as Deserialize<V>>::Error>,
+{
+    type Error = ErrorStack;
+
+    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    where
+        T: once_io::OStream,
+    {
+        let mut class = Class::default();
+        class.uuid = deserialize!(
+            Chunk::<{ TypeCode::OpenNurbsClassUuid as u32 }, Uuid>,
+            V,
+            ostream,
+            "uuid"
+        )
+        .inner;
+        Ok(class)
+    }
+}
+
 #[derive(Default, Deserialize)]
 pub struct Record {
     #[in_chunk(ObjectRecordType)]
     _empty: (),
+    #[in_chunk(OpenNurbsClass)]
+    pub class: Class,
 }
 
 #[derive(Default)]
