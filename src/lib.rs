@@ -26,6 +26,7 @@ pub mod on_version;
 pub mod plane;
 pub mod plugin;
 pub mod point;
+pub mod poly_line;
 pub mod properties;
 pub mod revision_history;
 pub mod rollback;
