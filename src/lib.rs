@@ -19,6 +19,7 @@ pub mod notes;
 pub mod nurbs_curve;
 pub mod object;
 pub mod on_version;
+pub mod plane;
 pub mod plugin;
 pub mod point;
 pub mod properties;
