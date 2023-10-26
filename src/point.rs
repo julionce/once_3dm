@@ -27,7 +27,7 @@ pub struct Point2D {
     pub y: f64,
 }
 
-#[derive(Default, Deserialize)]
+#[derive(Default, Deserialize, Clone, Copy)]
 pub struct Point3D {
     pub x: f64,
     pub y: f64,
