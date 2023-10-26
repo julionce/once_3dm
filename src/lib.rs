@@ -7,6 +7,7 @@ pub mod bitmap;
 pub mod body;
 pub mod bounding_box;
 pub mod chunk;
+pub mod circle;
 pub mod color;
 pub mod comment;
 pub mod compressed_buffer;
