@@ -14,6 +14,7 @@ pub mod converters;
 pub mod deserialize;
 pub mod error;
 pub mod header;
+pub mod line;
 pub mod mesh_parameters;
 pub mod notes;
 pub mod nurbs_curve;
