@@ -2,6 +2,7 @@
 #![feature(int_roundings)]
 
 pub mod application;
+pub mod arc;
 pub mod archive;
 pub mod bitmap;
 pub mod body;
