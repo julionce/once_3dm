@@ -6,6 +6,7 @@ use crate::{
     deserialize,
     deserialize::{Deserialize, FileVersion},
     error::{Error, ErrorKind, ErrorStack},
+    line::LineCurve,
     nurbs_curve::NurbsCurve,
     point::{Point, PointCloud},
     rollback::Rollback,
@@ -139,10 +140,18 @@ const POINT_CLOUD_ID: Uuid = Uuid {
     data4: [0xBF, 0xEC, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 
+const LINE_CURVE_ID: Uuid = Uuid {
+    data1: 0x4ED7D4DB,
+    data2: 0xE947,
+    data3: 0x11d3,
+    data4: [0xBF, 0xE5, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
+};
+
 #[derive(TryFromPrimitive)]
 #[repr(u8)]
 pub enum Kind {
     BRep,
+    LineCurve,
     NurbsCurve,
     NurbsSurface,
     Point,
@@ -165,6 +174,7 @@ impl TryInto<Kind> for Uuid {
             SUM_SURFACE_ID | SUM_SURFACE_TL_ID => Ok(Kind::SumSurface),
             POINT_ID => Ok(Kind::Point),
             POINT_CLOUD_ID => Ok(Kind::PointCloud),
+            LINE_CURVE_ID => Ok(Kind::LineCurve),
             _ => Err(Error::Simple(ErrorKind::UnknownObjectId)),
         }
     }
@@ -174,6 +184,7 @@ impl TryInto<Kind> for Uuid {
 pub enum Data {
     #[default]
     Empty,
+    LineCurve(LineCurve),
     NurbsCurve(NurbsCurve),
     Point(Point),
     PointCloud(PointCloud),
@@ -226,6 +237,14 @@ where
                 Kind::PointCloud => Data::PointCloud(
                     deserialize!(
                         ChunkInStream::<{ TypeCode::OpenNurbsClassData as u32 }, PointCloud>,
+                        V,
+                        ostream
+                    )?
+                    .inner,
+                ),
+                Kind::LineCurve => Data::LineCurve(
+                    deserialize!(
+                        ChunkInStream::<{ TypeCode::OpenNurbsClassData as u32 }, LineCurve>,
                         V,
                         ostream
                     )?
