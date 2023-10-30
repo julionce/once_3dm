@@ -22,6 +22,7 @@ pub mod mesh_parameters;
 pub mod notes;
 pub mod nurbs_curve;
 pub mod object;
+pub mod object_id;
 pub mod on_version;
 pub mod plane;
 pub mod plugin;
