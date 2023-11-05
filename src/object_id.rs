@@ -3,19 +3,19 @@ use crate::uuid::Uuid;
 pub const ANGULAR_DIMENSION2_EXTRA: Uuid = Uuid {
     data1: 0xA68B151F,
     data2: 0xC778,
-    data3: 0x4a6e,
+    data3: 0x4A6E,
     data4: [0xBC, 0xB4, 0x23, 0xDD, 0xD1, 0x83, 0x56, 0x77],
 };
 pub const ANNOTATION_TEXT_FORMULA: Uuid = Uuid {
     data1: 0x699FCC42,
     data2: 0x62D4,
-    data3: 0x488c,
+    data3: 0x488C,
     data4: [0x91, 0x09, 0xF1, 0xB7, 0xA3, 0x7C, 0xE9, 0x26],
 };
 pub const ARC_CURVE: Uuid = Uuid {
     data1: 0xCF33BE2A,
     data2: 0x09B4,
-    data3: 0x11d4,
+    data3: 0x11D4,
     data4: [0xBF, 0xFB, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const BREP: Uuid = Uuid {
@@ -57,13 +57,13 @@ pub const CLIPPING_PLANE_SURFACE: Uuid = Uuid {
 pub const CURVE_ON_SURFACE: Uuid = Uuid {
     data1: 0x4ED7D4D8,
     data2: 0xE947,
-    data3: 0x11d3,
+    data3: 0x11D3,
     data4: [0xBF, 0xE5, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const CURVE_PROXY: Uuid = Uuid {
     data1: 0x4ED7D4D9,
     data2: 0xE947,
-    data3: 0x11d3,
+    data3: 0x11D3,
     data4: [0xBF, 0xE5, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const DETAIL_VIEW: Uuid = Uuid {
@@ -129,7 +129,7 @@ pub const EXTRUSION: Uuid = Uuid {
 pub const GEOMETRY: Uuid = Uuid {
     data1: 0x4ED7D4DA,
     data2: 0xE947,
-    data3: 0x11d3,
+    data3: 0x11D3,
     data4: [0xBF, 0xE5, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const GRADIENT_COLOR_DATA: Uuid = Uuid {
@@ -147,7 +147,7 @@ pub const GROUP: Uuid = Uuid {
 pub const HATCH: Uuid = Uuid {
     data1: 0x0559733B,
     data2: 0x5332,
-    data3: 0x49d1,
+    data3: 0x49D1,
     data4: [0xA9, 0x36, 0x05, 0x32, 0xAC, 0x76, 0xAD, 0xE5],
 };
 pub const HATCH_PATTERN: Uuid = Uuid {
@@ -159,13 +159,13 @@ pub const HATCH_PATTERN: Uuid = Uuid {
 pub const HISTORY_RECORD: Uuid = Uuid {
     data1: 0xECD0FD2F,
     data2: 0x2088,
-    data3: 0x49dc,
+    data3: 0x49DC,
     data4: [0x96, 0x41, 0x9C, 0xF7, 0xA2, 0x8F, 0xFA, 0x6B],
 };
 pub const INSTANCE_DEFINITION: Uuid = Uuid {
     data1: 0x26F8BFF6,
     data2: 0x2618,
-    data3: 0x417f,
+    data3: 0x417F,
     data4: [0xA1, 0x58, 0x15, 0x3D, 0x64, 0xA9, 0x49, 0x89],
 };
 pub const INSTANCE_REF: Uuid = Uuid {
@@ -183,13 +183,13 @@ pub const INTERNAL_OBSOLETE_USER_DATA: Uuid = Uuid {
 pub const LAYER: Uuid = Uuid {
     data1: 0x95809813,
     data2: 0xE985,
-    data3: 0x11d3,
+    data3: 0x11D3,
     data4: [0xBF, 0xE5, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const LAYER_EXTENSIONS: Uuid = Uuid {
     data1: 0x3E4904E6,
     data2: 0xE930,
-    data3: 0x4fbc,
+    data3: 0x4FBC,
     data4: [0xAA, 0x42, 0xEB, 0xD4, 0x07, 0xAE, 0xFE, 0x3B],
 };
 pub const LEADER: Uuid = Uuid {
@@ -201,7 +201,7 @@ pub const LEADER: Uuid = Uuid {
 pub const LIGHT: Uuid = Uuid {
     data1: 0x85A08513,
     data2: 0xF383,
-    data3: 0x11d3,
+    data3: 0x11D3,
     data4: [0xBF, 0xE7, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const LINE_CURVE: Uuid = Uuid {
@@ -213,19 +213,19 @@ pub const LINE_CURVE: Uuid = Uuid {
 pub const LINE_TYPE: Uuid = Uuid {
     data1: 0x26F10A24,
     data2: 0x7D13,
-    data3: 0x4f05,
+    data3: 0x4F05,
     data4: [0x8F, 0xDA, 0x8E, 0x36, 0x4D, 0xAF, 0x8E, 0xA6],
 };
 pub const MATERIAL: Uuid = Uuid {
     data1: 0x60B5DBBC,
     data2: 0xE660,
-    data3: 0x11d3,
+    data3: 0x11D3,
     data4: [0xBF, 0xE4, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const MESH: Uuid = Uuid {
     data1: 0x4ED7D4E4,
     data2: 0xE947,
-    data3: 0x11d3,
+    data3: 0x11D3,
     data4: [0xBF, 0xE5, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const MESH_COMPONENT_REF: Uuid = Uuid {
@@ -261,7 +261,7 @@ pub const MY_USER_DATA: Uuid = Uuid {
 pub const NURBS_CAGE: Uuid = Uuid {
     data1: 0x06936AFB,
     data2: 0x3D3C,
-    data3: 0x41ac,
+    data3: 0x41AC,
     data4: [0xBF, 0x70, 0xC9, 0x31, 0x9F, 0xA4, 0x80, 0xA1],
 };
 pub const NURBS_CURVE: Uuid = Uuid {
@@ -285,7 +285,7 @@ pub const NURBS_CURVE_TL: Uuid = Uuid {
 pub const NURBS_SURFACE: Uuid = Uuid {
     data1: 0x4ED7D4DE,
     data2: 0xE947,
-    data3: 0x11d3,
+    data3: 0x11D3,
     data4: [0xBF, 0xE5, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const NURBS_SURFACE_OLD: Uuid = Uuid {
@@ -303,7 +303,7 @@ pub const NURBS_SURFACE_TL: Uuid = Uuid {
 pub const OBJECT_ATTRIBUTES: Uuid = Uuid {
     data1: 0xA828C015,
     data2: 0x09F5,
-    data3: 0x477c,
+    data3: 0x477C,
     data4: [0x86, 0x65, 0xF0, 0x48, 0x2F, 0x5D, 0x69, 0x96],
 };
 pub const OBSOLETE_CCUSTOM_MESH_USER_DATA: Uuid = Uuid {
@@ -345,31 +345,31 @@ pub const OBSOLETE_V2_ANNOTATION_ARROW: Uuid = Uuid {
 pub const OBSOLETE_V2_DIM_ANGULAR: Uuid = Uuid {
     data1: 0x5DE6B20F,
     data2: 0x486B,
-    data3: 0x11d4,
+    data3: 0x11D4,
     data4: [0x80, 0x14, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const OBSOLETE_V2_DIM_LINEAR: Uuid = Uuid {
     data1: 0x5DE6B20D,
     data2: 0x486B,
-    data3: 0x11d4,
+    data3: 0x11D4,
     data4: [0x80, 0x14, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const OBSOLETE_V2_DIM_RADIAL: Uuid = Uuid {
     data1: 0x5DE6B20E,
     data2: 0x486B,
-    data3: 0x11d4,
+    data3: 0x11D4,
     data4: [0x80, 0x14, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const OBSOLETE_V2_LEADER: Uuid = Uuid {
     data1: 0x5DE6B211,
     data2: 0x486B,
-    data3: 0x11d4,
+    data3: 0x11D4,
     data4: [0x80, 0x14, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const OBSOLETE_V2_TEXT_DOT: Uuid = Uuid {
     data1: 0x8BD94E19,
     data2: 0x59E1,
-    data3: 0x11d4,
+    data3: 0x11D4,
     data4: [0x80, 0x18, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const OBSOLETE_V2_TEXT_OBJECT: Uuid = Uuid {
@@ -387,7 +387,7 @@ pub const OBSOLETE_V5_DIM_ANGULAR: Uuid = Uuid {
 pub const OBSOLETE_V5_DIM_EXTRA: Uuid = Uuid {
     data1: 0x8AD5B9FC,
     data2: 0x0D5C,
-    data3: 0x47fb,
+    data3: 0x47FB,
     data4: [0xAD, 0xFD, 0x74, 0xC2, 0x8B, 0x6F, 0x66, 0x1E],
 };
 pub const OBSOLETE_V5_DIM_LINEAR: Uuid = Uuid {
@@ -411,7 +411,7 @@ pub const OBSOLETE_V5_DIM_RADIAL: Uuid = Uuid {
 pub const OBSOLETE_V5_HATCH_EXTRA: Uuid = Uuid {
     data1: 0x3FF7007C,
     data2: 0x3D04,
-    data3: 0x463f,
+    data3: 0x463F,
     data4: [0x84, 0xE3, 0x13, 0x2A, 0xCE, 0xB9, 0x10, 0x62],
 };
 pub const OBSOLETE_V5_LEADER: Uuid = Uuid {
@@ -423,7 +423,7 @@ pub const OBSOLETE_V5_LEADER: Uuid = Uuid {
 pub const OBSOLETE_V5_TEXT_EXTRA: Uuid = Uuid {
     data1: 0xD90490A5,
     data2: 0xDB86,
-    data3: 0x49f8,
+    data3: 0x49F8,
     data4: [0xBD, 0xA1, 0x90, 0x80, 0xB1, 0xF4, 0xE9, 0x76],
 };
 pub const OBSOLETE_V5_TEXT_OBJECT: Uuid = Uuid {
@@ -435,7 +435,7 @@ pub const OBSOLETE_V5_TEXT_OBJECT: Uuid = Uuid {
 pub const OFFSET_SURFACE: Uuid = Uuid {
     data1: 0x00C61749,
     data2: 0xD430,
-    data3: 0x4ecc,
+    data3: 0x4ECC,
     data4: [0x83, 0xA8, 0x29, 0x13, 0x0A, 0x20, 0xCF, 0x9C],
 };
 pub const PER_OBJECT_MESH_PARAMETERS: Uuid = Uuid {
@@ -453,31 +453,31 @@ pub const PHYSICALLY_BASED_MATERIAL_USER_DATA: Uuid = Uuid {
 pub const PLANE_SURFACE: Uuid = Uuid {
     data1: 0x4ED7D4DF,
     data2: 0xE947,
-    data3: 0x11d3,
+    data3: 0x11D3,
     data4: [0xBF, 0xE5, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const POINT: Uuid = Uuid {
     data1: 0xC3101A1D,
     data2: 0xF157,
-    data3: 0x11d3,
+    data3: 0x11D3,
     data4: [0xBF, 0xE7, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const POINT_CLOUD: Uuid = Uuid {
     data1: 0x2488F347,
     data2: 0xF8FA,
-    data3: 0x11d3,
+    data3: 0x11D3,
     data4: [0xBF, 0xEC, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const POINT_GRID: Uuid = Uuid {
     data1: 0x4ED7D4E5,
     data2: 0xE947,
-    data3: 0x11d3,
+    data3: 0x11D3,
     data4: [0xBF, 0xE5, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const POLY_CURVE: Uuid = Uuid {
     data1: 0x4ED7D4E0,
     data2: 0xE947,
-    data3: 0x11d3,
+    data3: 0x11D3,
     data4: [0xBF, 0xE5, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const POLY_CURVE_OLD: Uuid = Uuid {
@@ -495,7 +495,7 @@ pub const POLY_EDGE_CURVE: Uuid = Uuid {
 pub const POLY_EDGE_SEGMENT: Uuid = Uuid {
     data1: 0x42F47A87,
     data2: 0x5B1B,
-    data3: 0x4e31,
+    data3: 0x4E31,
     data4: [0xAB, 0x87, 0x46, 0x39, 0xD7, 0x83, 0x25, 0xD6],
 };
 pub const POLY_LINE_CURVE: Uuid = Uuid {
@@ -555,7 +555,7 @@ pub const SUM_SURFACE_TL: Uuid = Uuid {
 pub const SURFACE_PROXY: Uuid = Uuid {
     data1: 0x4ED7D4E2,
     data2: 0xE947,
-    data3: 0x11d3,
+    data3: 0x11D3,
     data4: [0xBF, 0xE5, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const TEXT: Uuid = Uuid {
@@ -585,13 +585,13 @@ pub const TEXT_STYLE: Uuid = Uuid {
 pub const TEXTURE: Uuid = Uuid {
     data1: 0xD6FF106D,
     data2: 0x329B,
-    data3: 0x4f29,
+    data3: 0x4F29,
     data4: [0x97, 0xE2, 0xFD, 0x28, 0x2A, 0x61, 0x80, 0x20],
 };
 pub const TEXTURE_MAPPING: Uuid = Uuid {
     data1: 0x32EC997A,
     data2: 0xC3BF,
-    data3: 0x4ae5,
+    data3: 0x4AE5,
     data4: [0xAB, 0x19, 0xFD, 0x57, 0x2B, 0x8A, 0xD5, 0x54],
 };
 pub const TRIMMED_SURFACE: Uuid = Uuid {
@@ -603,31 +603,31 @@ pub const TRIMMED_SURFACE: Uuid = Uuid {
 pub const UNKNOWN_USER_DATA: Uuid = Uuid {
     data1: 0x850324A8,
     data2: 0x050E,
-    data3: 0x11d4,
+    data3: 0x11D4,
     data4: [0xBF, 0xFA, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const USER_STRING_LIST: Uuid = Uuid {
     data1: 0xCE28DE29,
     data2: 0xF4C5,
-    data3: 0x4faa,
+    data3: 0x4FAA,
     data4: [0xA5, 0x0A, 0xC3, 0xA6, 0x84, 0x9B, 0x63, 0x29],
 };
 pub const V4_V5_MESH_NGON_USER_DATA: Uuid = Uuid {
     data1: 0x31F55AA3,
     data2: 0x71FB,
-    data3: 0x49f5,
+    data3: 0x49F5,
     data4: [0xA9, 0x75, 0x75, 0x75, 0x84, 0xD9, 0x37, 0xFF],
 };
 pub const V5X_DIM_STYLE: Uuid = Uuid {
     data1: 0x81BD83D5,
     data2: 0x7120,
-    data3: 0x41c4,
+    data3: 0x41C4,
     data4: [0x9A, 0x57, 0xC4, 0x49, 0x33, 0x6F, 0xF1, 0x2C],
 };
 pub const V5_BREP_REGION_TOPOLOGY_USER_DATA: Uuid = Uuid {
     data1: 0x7FE23D63,
     data2: 0xE536,
-    data3: 0x43f1,
+    data3: 0x43F1,
     data4: [0x98, 0xE2, 0xC8, 0x07, 0xA2, 0x62, 0x5A, 0xFF],
 };
 pub const V5_EXTRUSION_DISPLAY_MESH_CACHE: Uuid = Uuid {
@@ -639,25 +639,25 @@ pub const V5_EXTRUSION_DISPLAY_MESH_CACHE: Uuid = Uuid {
 pub const V5_MESH_DOUBLE_VERTICES: Uuid = Uuid {
     data1: 0x17F24E75,
     data2: 0x21BE,
-    data3: 0x4a7b,
+    data3: 0x4A7B,
     data4: [0x9F, 0x3D, 0x7F, 0x85, 0x22, 0x52, 0x47, 0xE3],
 };
 pub const VIEWPORT: Uuid = Uuid {
     data1: 0xD66E5CCF,
     data2: 0xEA39,
-    data3: 0x11d3,
+    data3: 0x11D3,
     data4: [0xBF, 0xE5, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const WINDOWS_BITMAP: Uuid = Uuid {
     data1: 0x390465EB,
     data2: 0x3721,
-    data3: 0x11d4,
+    data3: 0x11D4,
     data4: [0x80, 0x0B, 0x00, 0x10, 0x83, 0x01, 0x22, 0xF0],
 };
 pub const WINDOWS_BITMAP_EX: Uuid = Uuid {
     data1: 0x203AFC17,
     data2: 0xBCC9,
-    data3: 0x44fb,
+    data3: 0x44FB,
     data4: [0xA0, 0x7B, 0x7F, 0x5C, 0x31, 0xBD, 0x5E, 0xD9],
 };
 
