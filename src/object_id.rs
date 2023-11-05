@@ -669,403 +669,376 @@ mod tests {
     fn object_ids() {
         assert_eq!(
             format!("{}", CEXAMPLE_WRITE_USER_DATA),
-            "DADD17C5-706D-44ea-9B13-7D9D2C56D085".to_uppercase()
+            "DADD17C5-706D-44EA-9B13-7D9D2C56D085"
         );
         assert_eq!(
             format!("{}", MY_USER_DATA),
-            "53114529-1CD7-4872-818E-311CB19101FA".to_uppercase()
+            "53114529-1CD7-4872-818E-311CB19101FA"
         );
         assert_eq!(
             format!("{}", OBJECT_ATTRIBUTES),
-            "A828C015-09F5-477c-8665-F0482F5D6996".to_uppercase()
+            "A828C015-09F5-477C-8665-F0482F5D6996"
         );
         assert_eq!(
             format!("{}", RENDER_SETTINGS),
-            "58A5953A-57C5-4FD3-84F5-7D4240478D15".to_uppercase()
+            "58A5953A-57C5-4FD3-84F5-7D4240478D15"
         );
         assert_eq!(
             format!("{}", ARC_CURVE),
-            "CF33BE2A-09B4-11d4-BFFB-0010830122F0".to_uppercase()
+            "CF33BE2A-09B4-11D4-BFFB-0010830122F0"
         );
         assert_eq!(
             format!("{}", OBSOLETE_CCUSTOM_MESH_USER_DATA),
-            "69F27695-3011-4FBA-82C1-E529F25B5FD9".to_uppercase()
+            "69F27695-3011-4FBA-82C1-E529F25B5FD9"
         );
         assert_eq!(
             format!("{}", EXTRUSION),
-            "36F53175-72B8-4d47-BF1F-B4E6FC24F4B9".to_uppercase()
+            "36F53175-72B8-4D47-BF1F-B4E6FC24F4B9"
         );
         assert_eq!(
             format!("{}", V5_EXTRUSION_DISPLAY_MESH_CACHE),
-            "A8130A3E-E4F3-4CB0-BB8A-F10A473912D0".to_uppercase()
+            "A8130A3E-E4F3-4CB0-BB8A-F10A473912D0"
         );
         assert_eq!(
             format!("{}", WINDOWS_BITMAP),
-            "390465EB-3721-11d4-800B-0010830122F0".to_uppercase()
+            "390465EB-3721-11D4-800B-0010830122F0"
         );
         assert_eq!(
             format!("{}", EMBEDDED_BITMAP),
-            "772E6FC1-B17B-4fc4-8F54-5FDA511D76D2".to_uppercase()
+            "772E6FC1-B17B-4FC4-8F54-5FDA511D76D2"
         );
         assert_eq!(
             format!("{}", WINDOWS_BITMAP_EX),
-            "203AFC17-BCC9-44fb-A07B-7F5C31BD5ED9".to_uppercase()
+            "203AFC17-BCC9-44FB-A07B-7F5C31BD5ED9"
         );
-        assert_eq!(
-            format!("{}", BREP),
-            "60B5DBC5-E660-11d3-BFE4-0010830122F0".to_uppercase()
-        );
+        assert_eq!(format!("{}", BREP), "60B5DBC5-E660-11D3-BFE4-0010830122F0");
         assert_eq!(
             format!("{}", V5_BREP_REGION_TOPOLOGY_USER_DATA),
-            "7FE23D63-E536-43f1-98E2-C807A2625AFF".to_uppercase()
+            "7FE23D63-E536-43F1-98E2-C807A2625AFF"
         );
         assert_eq!(
             format!("{}", CURVE_ON_SURFACE),
-            "4ED7D4D8-E947-11d3-BFE5-0010830122F0".to_uppercase()
+            "4ED7D4D8-E947-11D3-BFE5-0010830122F0"
         );
         assert_eq!(
             format!("{}", CURVE_PROXY),
-            "4ED7D4D9-E947-11d3-BFE5-0010830122F0".to_uppercase()
+            "4ED7D4D9-E947-11D3-BFE5-0010830122F0"
         );
         assert_eq!(
             format!("{}", DETAIL_VIEW),
-            "C8C66EFA-B3CB-4e00-9440-2AD66203379E".to_uppercase()
+            "C8C66EFA-B3CB-4E00-9440-2AD66203379E"
         );
         assert_eq!(
             format!("{}", DIM_LINEAR),
-            "E550882B-F44D-4154-A1EF-6E50CBBBF543".to_uppercase()
+            "E550882B-F44D-4154-A1EF-6E50CBBBF543"
         );
         assert_eq!(
             format!("{}", DIM_ANGULAR),
-            "D417786B-F6CD-4F12-9E1F-063F414DBEB6".to_uppercase()
+            "D417786B-F6CD-4F12-9E1F-063F414DBEB6"
         );
         assert_eq!(
             format!("{}", DIM_RADIAL),
-            "FC749C2F-4C00-41FD-9840-26D94F047AD3".to_uppercase()
+            "FC749C2F-4C00-41FD-9840-26D94F047AD3"
         );
         assert_eq!(
             format!("{}", DIM_ORDINATE),
-            "03124828-4C9B-4D28-9A82-664DDDE7A14F".to_uppercase()
+            "03124828-4C9B-4D28-9A82-664DDDE7A14F"
         );
         assert_eq!(
             format!("{}", CENTER_MARK),
-            "D46767BA-7E8F-4D9D-9A92-66050219A5B9".to_uppercase()
+            "D46767BA-7E8F-4D9D-9A92-66050219A5B9"
         );
         assert_eq!(
             format!("{}", DIM_STYLE),
-            "67AA51A5-791D-4BEC-8AED-D23B462B6F87".to_uppercase()
+            "67AA51A5-791D-4BEC-8AED-D23B462B6F87"
         );
         assert_eq!(
             format!("{}", GEOMETRY),
-            "4ED7D4DA-E947-11d3-BFE5-0010830122F0".to_uppercase()
+            "4ED7D4DA-E947-11D3-BFE5-0010830122F0"
         );
-        assert_eq!(
-            format!("{}", GROUP),
-            "721D9F97-3645-44c4-8BE6-B2CF697D25CE".to_uppercase()
-        );
+        assert_eq!(format!("{}", GROUP), "721D9F97-3645-44C4-8BE6-B2CF697D25CE");
         assert_eq!(
             format!("{}", OBSOLETE_V5_HATCH_EXTRA),
-            "3FF7007C-3D04-463f-84E3-132ACEB91062".to_uppercase()
+            "3FF7007C-3D04-463F-84E3-132ACEB91062"
         );
         assert_eq!(
             format!("{}", HATCH_PATTERN),
-            "064E7C91-35F6-4734-A446-79FF7CD659E1".to_uppercase()
+            "064E7C91-35F6-4734-A446-79FF7CD659E1"
         );
-        assert_eq!(
-            format!("{}", HATCH),
-            "0559733B-5332-49d1-A936-0532AC76ADE5".to_uppercase()
-        );
+        assert_eq!(format!("{}", HATCH), "0559733B-5332-49D1-A936-0532AC76ADE5");
         assert_eq!(
             format!("{}", GRADIENT_COLOR_DATA),
-            "0C1AD613-4EFA-4F47-A147-4D79D77FCB0C".to_uppercase()
+            "0C1AD613-4EFA-4F47-A147-4D79D77FCB0C"
         );
         assert_eq!(
             format!("{}", INSTANCE_DEFINITION),
-            "26F8BFF6-2618-417f-A158-153D64A94989".to_uppercase()
+            "26F8BFF6-2618-417F-A158-153D64A94989"
         );
         assert_eq!(
             format!("{}", INSTANCE_REF),
-            "F9CFB638-B9D4-4340-87E3-C56E7865D96A".to_uppercase()
+            "F9CFB638-B9D4-4340-87E3-C56E7865D96A"
         );
         assert_eq!(
             format!("{}", OBSOLETE_IDEF_ALTERNATIVE_PATH_USER_DATA),
-            "F42D9671-21EB-4692-9B9A-BC3507FF28F5".to_uppercase()
+            "F42D9671-21EB-4692-9B9A-BC3507FF28F5"
         );
         assert_eq!(
             format!("{}", OBSOLETE_V5_TEXT_EXTRA),
-            "D90490A5-DB86-49f8-BDA1-9080B1F4E976".to_uppercase()
+            "D90490A5-DB86-49F8-BDA1-9080B1F4E976"
         );
         assert_eq!(
             format!("{}", OBSOLETE_V5_DIM_EXTRA),
-            "8AD5B9FC-0D5C-47fb-ADFD-74C28B6F661E".to_uppercase()
+            "8AD5B9FC-0D5C-47FB-ADFD-74C28B6F661E"
         );
         assert_eq!(
             format!("{}", OBSOLETE_V5_DIM_LINEAR),
-            "BD57F33B-A1B2-46e9-9C6E-AF09D30FFDDE".to_uppercase()
+            "BD57F33B-A1B2-46E9-9C6E-AF09D30FFDDE"
         );
         assert_eq!(
             format!("{}", OBSOLETE_V5_DIM_RADIAL),
-            "B2B683FC-7964-4e96-B1F9-9B356A76B08B".to_uppercase()
+            "B2B683FC-7964-4E96-B1F9-9B356A76B08B"
         );
         assert_eq!(
             format!("{}", OBSOLETE_V5_DIM_ANGULAR),
-            "841BC40B-A971-4a8e-94E5-BBA26D67348E".to_uppercase()
+            "841BC40B-A971-4A8E-94E5-BBA26D67348E"
         );
         assert_eq!(
             format!("{}", OBSOLETE_V5_TEXT_OBJECT),
-            "46F75541-F46B-48be-AA7E-B353BBE068A7".to_uppercase()
+            "46F75541-F46B-48BE-AA7E-B353BBE068A7"
         );
         assert_eq!(
             format!("{}", OBSOLETE_V5_LEADER),
-            "14922B7A-5B65-4f11-8345-D415A9637129".to_uppercase()
+            "14922B7A-5B65-4F11-8345-D415A9637129"
         );
         assert_eq!(
             format!("{}", TEXT_DOT),
-            "74198302-CDF4-4f95-9609-6D684F22AB37".to_uppercase()
+            "74198302-CDF4-4F95-9609-6D684F22AB37"
         );
         assert_eq!(
             format!("{}", OBSOLETE_V5_DIM_ORDINATE),
-            "C8288D69-5BD8-4f50-9BAF-525A0086B0C3".to_uppercase()
+            "C8288D69-5BD8-4F50-9BAF-525A0086B0C3"
         );
         assert_eq!(
             format!("{}", ANGULAR_DIMENSION2_EXTRA),
-            "A68B151F-C778-4a6e-BCB4-23DDD1835677".to_uppercase()
+            "A68B151F-C778-4A6E-BCB4-23DDD1835677"
         );
         assert_eq!(
             format!("{}", ANNOTATION_TEXT_FORMULA),
-            "699FCC42-62D4-488c-9109-F1B7A37CE926".to_uppercase()
+            "699FCC42-62D4-488C-9109-F1B7A37CE926"
         );
         assert_eq!(
             format!("{}", OBSOLETE_V2_DIM_LINEAR),
-            "5DE6B20D-486B-11d4-8014-0010830122F0".to_uppercase()
+            "5DE6B20D-486B-11D4-8014-0010830122F0"
         );
         assert_eq!(
             format!("{}", OBSOLETE_V2_DIM_RADIAL),
-            "5DE6B20E-486B-11d4-8014-0010830122F0".to_uppercase()
+            "5DE6B20E-486B-11D4-8014-0010830122F0"
         );
         assert_eq!(
             format!("{}", OBSOLETE_V2_DIM_ANGULAR),
-            "5DE6B20F-486B-11d4-8014-0010830122F0".to_uppercase()
+            "5DE6B20F-486B-11D4-8014-0010830122F0"
         );
         assert_eq!(
             format!("{}", OBSOLETE_V2_TEXT_OBJECT),
-            "5DE6B210-486B-11d4-8014-0010830122F0".to_uppercase()
+            "5DE6B210-486B-11D4-8014-0010830122F0"
         );
         assert_eq!(
             format!("{}", OBSOLETE_V2_LEADER),
-            "5DE6B211-486B-11d4-8014-0010830122F0".to_uppercase()
+            "5DE6B211-486B-11D4-8014-0010830122F0"
         );
         assert_eq!(
             format!("{}", OBSOLETE_V2_TEXT_DOT),
-            "8BD94E19-59E1-11d4-8018-0010830122F0".to_uppercase()
+            "8BD94E19-59E1-11D4-8018-0010830122F0"
         );
         assert_eq!(
             format!("{}", OBSOLETE_V2_ANNOTATION_ARROW),
-            "8BD94E1A-59E1-11d4-8018-0010830122F0".to_uppercase()
+            "8BD94E1A-59E1-11D4-8018-0010830122F0"
         );
         assert_eq!(
             format!("{}", DIM_STYLE_EXTRA),
-            "513FDE53-7284-4065-8601-06CEA8B28D6F".to_uppercase()
+            "513FDE53-7284-4065-8601-06CEA8B28D6F"
         );
         assert_eq!(
             format!("{}", V5X_DIM_STYLE),
-            "81BD83D5-7120-41c4-9A57-C449336FF12C".to_uppercase()
+            "81BD83D5-7120-41C4-9A57-C449336FF12C"
         );
-        assert_eq!(
-            format!("{}", LAYER),
-            "95809813-E985-11d3-BFE5-0010830122F0".to_uppercase()
-        );
+        assert_eq!(format!("{}", LAYER), "95809813-E985-11D3-BFE5-0010830122F0");
         assert_eq!(
             format!("{}", LAYER_EXTENSIONS),
-            "3E4904E6-E930-4fbc-AA42-EBD407AEFE3B".to_uppercase()
+            "3E4904E6-E930-4FBC-AA42-EBD407AEFE3B"
         );
         assert_eq!(
             format!("{}", LEADER),
-            "945BF594-6FF9-4F5C-BFC0-B3AF528F29D2".to_uppercase()
+            "945BF594-6FF9-4F5C-BFC0-B3AF528F29D2"
         );
-        assert_eq!(
-            format!("{}", LIGHT),
-            "85A08513-F383-11d3-BFE7-0010830122F0".to_uppercase()
-        );
+        assert_eq!(format!("{}", LIGHT), "85A08513-F383-11D3-BFE7-0010830122F0");
         assert_eq!(
             format!("{}", LINE_CURVE),
-            "4ED7D4DB-E947-11d3-BFE5-0010830122F0".to_uppercase()
+            "4ED7D4DB-E947-11D3-BFE5-0010830122F0"
         );
         assert_eq!(
             format!("{}", LINE_TYPE),
-            "26F10A24-7D13-4f05-8FDA-8E364DAF8EA6".to_uppercase()
+            "26F10A24-7D13-4F05-8FDA-8E364DAF8EA6"
         );
         assert_eq!(
             format!("{}", MATERIAL),
-            "60B5DBBC-E660-11d3-BFE4-0010830122F0".to_uppercase()
+            "60B5DBBC-E660-11D3-BFE4-0010830122F0"
         );
         assert_eq!(
             format!("{}", TEXTURE),
-            "D6FF106D-329B-4f29-97E2-FD282A618020".to_uppercase()
+            "D6FF106D-329B-4F29-97E2-FD282A618020"
         );
         assert_eq!(
             format!("{}", TEXTURE_MAPPING),
-            "32EC997A-C3BF-4ae5-AB19-FD572B8AD554".to_uppercase()
+            "32EC997A-C3BF-4AE5-AB19-FD572B8AD554"
         );
         assert_eq!(
             format!("{}", PHYSICALLY_BASED_MATERIAL_USER_DATA),
-            "5694E1AC-40E6-44F4-9CA9-3B6D0E8C4440".to_uppercase()
+            "5694E1AC-40E6-44F4-9CA9-3B6D0E8C4440"
         );
-        assert_eq!(
-            format!("{}", MESH),
-            "4ED7D4E4-E947-11d3-BFE5-0010830122F0".to_uppercase()
-        );
+        assert_eq!(format!("{}", MESH), "4ED7D4E4-E947-11D3-BFE5-0010830122F0");
         assert_eq!(
             format!("{}", MESH_COMPONENT_REF),
-            "1FD2F2BE-3346-4D7A-AE94-73C0B326D8F4".to_uppercase()
+            "1FD2F2BE-3346-4D7A-AE94-73C0B326D8F4"
         );
         assert_eq!(
             format!("{}", V5_MESH_DOUBLE_VERTICES),
-            "17F24E75-21BE-4a7b-9F3D-7F85225247E3".to_uppercase()
+            "17F24E75-21BE-4A7B-9F3D-7F85225247E3"
         );
         assert_eq!(
             format!("{}", PER_OBJECT_MESH_PARAMETERS),
-            "B5628CA9-82C4-4CAE-9883-487B3E4AB28B".to_uppercase()
+            "B5628CA9-82C4-4CAE-9883-487B3E4AB28B"
         );
         assert_eq!(
             format!("{}", V4_V5_MESH_NGON_USER_DATA),
-            "31F55AA3-71FB-49f5-A975-757584D937FF".to_uppercase()
+            "31F55AA3-71FB-49F5-A975-757584D937FF"
         );
         assert_eq!(
             format!("{}", MODEL_COMPONENT),
-            "CF37CFB5-8E6F-435F-98FE-D20FA9E7DB6F".to_uppercase()
+            "CF37CFB5-8E6F-435F-98FE-D20FA9E7DB6F"
         );
         assert_eq!(
             format!("{}", MODEL_GEOMETRY_COMPONENT),
-            "29D1B827-41CE-45C1-B265-0686AA391DAE".to_uppercase()
+            "29D1B827-41CE-45C1-B265-0686AA391DAE"
         );
         assert_eq!(
             format!("{}", NURBS_CURVE),
-            "4ED7D4DD-E947-11d3-BFE5-0010830122F0".to_uppercase()
+            "4ED7D4DD-E947-11D3-BFE5-0010830122F0"
         );
         assert_eq!(
             format!("{}", NURBS_SURFACE),
-            "4ED7D4DE-E947-11d3-BFE5-0010830122F0".to_uppercase()
+            "4ED7D4DE-E947-11D3-BFE5-0010830122F0"
         );
         assert_eq!(
             format!("{}", NURBS_CAGE),
-            "06936AFB-3D3C-41ac-BF70-C9319FA480A1".to_uppercase()
+            "06936AFB-3D3C-41AC-BF70-C9319FA480A1"
         );
         assert_eq!(
             format!("{}", MORPH_CONTROL),
-            "D379E6D8-7C31-4407-A913-E3B7040D034A".to_uppercase()
+            "D379E6D8-7C31-4407-A913-E3B7040D034A"
         );
         assert_eq!(
             format!("{}", HISTORY_RECORD),
-            "ECD0FD2F-2088-49dc-9641-9CF7A28FFA6B".to_uppercase()
+            "ECD0FD2F-2088-49DC-9641-9CF7A28FFA6B"
         );
         assert_eq!(
             format!("{}", OFFSET_SURFACE),
-            "00C61749-D430-4ecc-83A8-29130A20CF9C".to_uppercase()
+            "00C61749-D430-4ECC-83A8-29130A20CF9C"
         );
         assert_eq!(
             format!("{}", PLANE_SURFACE),
-            "4ED7D4DF-E947-11d3-BFE5-0010830122F0".to_uppercase()
+            "4ED7D4DF-E947-11D3-BFE5-0010830122F0"
         );
         assert_eq!(
             format!("{}", CLIPPING_PLANE_SURFACE),
-            "DBC5A584-CE3F-4170-98A8-497069CA5C36".to_uppercase()
+            "DBC5A584-CE3F-4170-98A8-497069CA5C36"
         );
         assert_eq!(
             format!("{}", POINT_CLOUD),
-            "2488F347-F8FA-11d3-BFEC-0010830122F0".to_uppercase()
+            "2488F347-F8FA-11D3-BFEC-0010830122F0"
         );
-        assert_eq!(
-            format!("{}", POINT),
-            "C3101A1D-F157-11d3-BFE7-0010830122F0".to_uppercase()
-        );
+        assert_eq!(format!("{}", POINT), "C3101A1D-F157-11D3-BFE7-0010830122F0");
         assert_eq!(
             format!("{}", POINT_GRID),
-            "4ED7D4E5-E947-11d3-BFE5-0010830122F0".to_uppercase()
+            "4ED7D4E5-E947-11D3-BFE5-0010830122F0"
         );
         assert_eq!(
             format!("{}", POLY_CURVE),
-            "4ED7D4E0-E947-11d3-BFE5-0010830122F0".to_uppercase()
+            "4ED7D4E0-E947-11D3-BFE5-0010830122F0"
         );
         assert_eq!(
             format!("{}", POLY_EDGE_SEGMENT),
-            "42F47A87-5B1B-4e31-AB87-4639D78325D6".to_uppercase()
+            "42F47A87-5B1B-4E31-AB87-4639D78325D6"
         );
         assert_eq!(
             format!("{}", POLY_EDGE_CURVE),
-            "39FF3DD3-FE0F-4807-9D59-185F0D73C0E4".to_uppercase()
+            "39FF3DD3-FE0F-4807-9D59-185F0D73C0E4"
         );
         assert_eq!(
             format!("{}", POLY_LINE_CURVE),
-            "4ED7D4E6-E947-11d3-BFE5-0010830122F0".to_uppercase()
+            "4ED7D4E6-E947-11D3-BFE5-0010830122F0"
         );
         assert_eq!(
             format!("{}", REV_SURFACE),
-            "A16220D3-163B-11d4-8000-0010830122F0".to_uppercase()
+            "A16220D3-163B-11D4-8000-0010830122F0"
         );
-        assert_eq!(
-            format!("{}", SUB_D),
-            "F09BA4D9-455B-42C3-BA3B-E6CCACEF853B".to_uppercase()
-        );
+        assert_eq!(format!("{}", SUB_D), "F09BA4D9-455B-42C3-BA3B-E6CCACEF853B");
         assert_eq!(
             format!("{}", SUB_DMESH_PROXY_USER_DATA),
-            "2868B9CD-28AE-4EA7-8073-BD390B3E97C8".to_uppercase()
+            "2868B9CD-28AE-4EA7-8073-BD390B3E97C8"
         );
         assert_eq!(
             format!("{}", SUB_DCOMPONENT_REF),
-            "C221FC6D-36B7-47E8-90AA-AC8EC784E3DD".to_uppercase()
+            "C221FC6D-36B7-47E8-90AA-AC8EC784E3DD"
         );
         assert_eq!(
             format!("{}", SUM_SURFACE),
-            "C4CD5359-446D-4690-9FF5-29059732472B".to_uppercase()
+            "C4CD5359-446D-4690-9FF5-29059732472B"
         );
         assert_eq!(
             format!("{}", SURFACE_PROXY),
-            "4ED7D4E2-E947-11d3-BFE5-0010830122F0".to_uppercase()
+            "4ED7D4E2-E947-11D3-BFE5-0010830122F0"
         );
         assert_eq!(
             format!("{}", TEXT_CONTENT),
-            "4F0F51FB-35D0-9998-4865-9721D6D2C6A9".to_uppercase()
+            "4F0F51FB-35D0-9998-4865-9721D6D2C6A9"
         );
         assert_eq!(
             format!("{}", TEXT_STYLE),
-            "4F0F51FB-35D0-4865-9998-6D2C6A99721D".to_uppercase()
+            "4F0F51FB-35D0-4865-9998-6D2C6A99721D"
         );
-        assert_eq!(
-            format!("{}", TEXT),
-            "57376349-62A9-4A16-B411-A46BCD544790".to_uppercase()
-        );
+        assert_eq!(format!("{}", TEXT), "57376349-62A9-4A16-B411-A46BCD544790");
         assert_eq!(
             format!("{}", OBSOLETE_USER_DATA),
-            "7C9305E5-947A-4E46-B102-8016849FABB1".to_uppercase()
+            "7C9305E5-947A-4E46-B102-8016849FABB1"
         );
         assert_eq!(
             format!("{}", UNKNOWN_USER_DATA),
-            "850324A8-050E-11d4-BFFA-0010830122F0".to_uppercase()
+            "850324A8-050E-11D4-BFFA-0010830122F0"
         );
         assert_eq!(
             format!("{}", USER_STRING_LIST),
-            "CE28DE29-F4C5-4faa-A50A-C3A6849B6329".to_uppercase()
+            "CE28DE29-F4C5-4FAA-A50A-C3A6849B6329"
         );
         assert_eq!(
             format!("{}", DOCUMENT_USER_STRING_LIST),
-            "06F3218E-F5EC-4f6c-B74C-14583F0ED7BC".to_uppercase()
+            "06F3218E-F5EC-4F6C-B74C-14583F0ED7BC"
         );
         assert_eq!(
             format!("{}", INTERNAL_OBSOLETE_USER_DATA),
-            "EDA27090-1DDD-4E4D-AB0C-75CCF0216565".to_uppercase()
+            "EDA27090-1DDD-4E4D-AB0C-75CCF0216565"
         );
         assert_eq!(
             format!("{}", OBSOLETE_IDEF_LAYER_SETTINGS_USER_DATA),
-            "11EE2C1F-F90D-4C6A-A7CD-EC8532E1E32D".to_uppercase()
+            "11EE2C1F-F90D-4C6A-A7CD-EC8532E1E32D"
         );
         assert_eq!(
             format!("{}", OBSOLETE_LAYER_SETTINGS_USER_DATA),
-            "BFB63C09-4BC7-4727-89BB-7CC754118200".to_uppercase()
+            "BFB63C09-4BC7-4727-89BB-7CC754118200"
         );
         assert_eq!(
             format!("{}", VIEWPORT),
-            "D66E5CCF-EA39-11d3-BFE5-0010830122F0".to_uppercase()
+            "D66E5CCF-EA39-11D3-BFE5-0010830122F0"
         );
     }
 }
