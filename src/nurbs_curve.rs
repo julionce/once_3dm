@@ -51,7 +51,7 @@ where
                 None => None,
             };
             match expected_knots_count {
-                Some(count) if count == knots_count => {}
+                Some(count) if 0 == knots_count || count == knots_count => {}
                 _ => {
                     return Err(ErrorStack::new(Error::Simple(ErrorKind::InvalidKnotsCount)));
                 }
@@ -59,13 +59,13 @@ where
             for _ in 0..knots_count {
                 curve.knots.push(deserialize!(f64, V, ostream, "knot"));
             }
-            let control_vertexes_count = deserialize!(u32, V, ostream, "control_vertexes_count");
+            let _count = deserialize!(u32, V, ostream, "count");
             let control_vertexes_size = match (curve.dimension, curve.is_rational) {
                 (0, _) => 0u32,
                 (d, true) => d + 1,
                 (d, false) => d,
             };
-            for _ in 0..control_vertexes_count {
+            for _ in 0..curve.control_vertex_count {
                 let mut row: Vec<f64> = vec![];
                 for _ in 0..control_vertexes_size {
                     row.push(deserialize!(f64, V, ostream, "vertex"));
