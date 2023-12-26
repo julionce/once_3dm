@@ -246,12 +246,12 @@ pub enum Data {
 }
 
 #[derive(Default)]
-pub struct Class {
+pub struct ClassInner {
     pub uuid: Uuid,
     pub data: Data,
 }
 
-impl<V> Deserialize<V> for Class
+impl<V> Deserialize<V> for ClassInner
 where
     V: FileVersion,
     chunk::Begin: Deserialize<V>,
@@ -263,7 +263,7 @@ where
     where
         T: once_io::OStream,
     {
-        let mut class = Class::default();
+        let mut class = ClassInner::default();
         let uuid = deserialize!(
             Chunk::<{ TypeCode::OpenNurbsClassUuid as u32 }, Uuid>,
             V,
@@ -332,10 +332,16 @@ where
 }
 
 #[derive(Default, Deserialize)]
+pub struct Class {
+    // TODO: move in_chunk to struct
+    #[in_chunk(OpenNurbsClass)]
+    pub inner: ClassInner,
+}
+
+#[derive(Default, Deserialize)]
 pub struct Record {
     #[in_chunk(ObjectRecordType)]
     _empty: (),
-    #[in_chunk(OpenNurbsClass)]
     pub class: Class,
 }
 
