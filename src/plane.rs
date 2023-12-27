@@ -22,4 +22,5 @@ pub struct Plane {
     pub x_axis: Vector3D,
     pub y_axis: Vector3D,
     pub z_axis: Vector3D,
+    pub equation: PlaneEquation,
 }
