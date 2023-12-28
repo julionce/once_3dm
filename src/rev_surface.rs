@@ -2,12 +2,12 @@ use crate::{
     bounding_box::BoundingBox,
     chunk,
     converters::U32IntoBool,
+    curve::Curve,
     deserialize,
     deserialize::{Deserialize, FileVersion},
     error::ErrorStack,
     interval::Interval,
     line::Line,
-    object,
 };
 
 #[derive(Default)]
@@ -18,7 +18,7 @@ pub struct RevSurface {
     pub bounding_box: BoundingBox,
     pub transposed: bool,
     pub has_curve: bool,
-    pub curve: Box<object::Class>,
+    pub curve: Option<Curve>,
 }
 
 impl<V> Deserialize<V> for RevSurface
@@ -43,7 +43,7 @@ where
                 surface.transposed = deserialize!(U32IntoBool, V, ostream, "transposed").into();
                 surface.has_curve = deserialize!(bool, V, ostream, "has_curve");
                 if surface.has_curve {
-                    surface.curve = Box::new(deserialize!(object::Class, V, ostream, "curve"));
+                    surface.curve = Some(deserialize!(Curve, V, ostream, "curve"));
                 }
             }
             2 => {
@@ -54,7 +54,7 @@ where
                 surface.transposed = deserialize!(U32IntoBool, V, ostream, "transposed").into();
                 surface.has_curve = deserialize!(bool, V, ostream, "has_curve");
                 if surface.has_curve {
-                    surface.curve = Box::new(deserialize!(object::Class, V, ostream, "curve"));
+                    surface.curve = Some(deserialize!(Curve, V, ostream, "curve"));
                 }
             }
             _ => {}
