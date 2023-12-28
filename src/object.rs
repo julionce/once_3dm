@@ -13,6 +13,7 @@ use crate::{
     point::{Point, PointCloud},
     poly_curve::PolyCurve,
     poly_line::PolyLineCurve,
+    rev_surface::RevSurface,
     rollback::Rollback,
     type_code::TypeCode,
     uuid::Uuid,
@@ -245,6 +246,7 @@ pub enum Data {
     PointCloud(PointCloud),
     PolyCurve(PolyCurve),
     PolyLineCurve(PolyLineCurve),
+    RevSurface(RevSurface),
 }
 
 #[derive(Default)]
@@ -326,6 +328,14 @@ where
                 Kind::PolyLineCurve => Data::PolyLineCurve(
                     deserialize!(
                         ChunkInStream::<{ TypeCode::OpenNurbsClassData as u32 }, PolyLineCurve>,
+                        V,
+                        ostream
+                    )?
+                    .inner,
+                ),
+                Kind::RevSurface => Data::RevSurface(
+                    deserialize!(
+                        ChunkInStream::<{ TypeCode::OpenNurbsClassData as u32 }, RevSurface>,
                         V,
                         ostream
                     )?

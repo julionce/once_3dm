@@ -30,6 +30,7 @@ pub mod point;
 pub mod poly_curve;
 pub mod poly_line;
 pub mod properties;
+pub mod rev_surface;
 pub mod revision_history;
 pub mod rollback;
 pub mod sequence;
