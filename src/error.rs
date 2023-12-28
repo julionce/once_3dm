@@ -16,6 +16,7 @@ pub enum ErrorKind {
     InvalidSequenceLength,
     InvalidStringLength,
     IoError,
+    ObjectIsNotACurve,
     UnknownObjectId,
 }
 
@@ -38,6 +39,7 @@ impl ErrorKind {
             InvalidSequenceLength => "invalid sequence length",
             InvalidStringLength => "invalid string length",
             IoError => "IO error",
+            ObjectIsNotACurve => "object is not a curve",
             UnknownObjectId => "Unknown object Id",
         }
     }

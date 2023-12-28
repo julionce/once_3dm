@@ -13,6 +13,7 @@ pub mod color;
 pub mod comment;
 pub mod compressed_buffer;
 pub mod converters;
+pub mod curve;
 pub mod deserialize;
 pub mod error;
 pub mod header;
