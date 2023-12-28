@@ -9,16 +9,45 @@ use crate::{
     interval::Interval,
     line::Line,
 };
+use once_3dm_macros::Deserialize;
+
+mod v1 {
+
+    use super::*;
+
+    #[derive(Default, Deserialize)]
+    pub struct RevSurface {
+        pub axis: Line,
+        pub angle: Interval,
+        pub bounding_box: BoundingBox,
+        #[underlying_type(U32IntoBool)]
+        pub transposed: bool,
+        pub curve: Option<Curve>,
+    }
+}
+
+mod v2 {
+
+    use super::*;
+
+    #[derive(Default, Deserialize)]
+    pub struct RevSurface {
+        pub axis: Line,
+        pub angle: Interval,
+        pub angle_parameter: Interval,
+        pub bounding_box: BoundingBox,
+        #[underlying_type(U32IntoBool)]
+        pub transposed: bool,
+        pub curve: Option<Curve>,
+    }
+}
 
 #[derive(Default)]
-pub struct RevSurface {
-    pub axis: Line,
-    pub angle: Interval,
-    pub angle_parameter: Interval,
-    pub bounding_box: BoundingBox,
-    pub transposed: bool,
-    pub has_curve: bool,
-    pub curve: Option<Curve>,
+pub enum RevSurface {
+    #[default]
+    Empty,
+    V1(v1::RevSurface),
+    V2(v2::RevSurface),
 }
 
 impl<V> Deserialize<V> for RevSurface
@@ -37,25 +66,10 @@ where
         let chunk_version = deserialize!(chunk::ShortVersion, V, ostream, "chunk_version");
         match chunk_version.major() {
             1 => {
-                surface.axis = deserialize!(Line, V, ostream, "axis");
-                surface.angle = deserialize!(Interval, V, ostream, "angle");
-                surface.bounding_box = deserialize!(BoundingBox, V, ostream, "bounding_box");
-                surface.transposed = deserialize!(U32IntoBool, V, ostream, "transposed").into();
-                surface.has_curve = deserialize!(bool, V, ostream, "has_curve");
-                if surface.has_curve {
-                    surface.curve = Some(deserialize!(Curve, V, ostream, "curve"));
-                }
+                surface = RevSurface::V1(deserialize!(v1::RevSurface, V, ostream, "v1 surface"));
             }
             2 => {
-                surface.axis = deserialize!(Line, V, ostream, "axis");
-                surface.angle = deserialize!(Interval, V, ostream, "angle");
-                surface.angle_parameter = deserialize!(Interval, V, ostream, "angle_parameter");
-                surface.bounding_box = deserialize!(BoundingBox, V, ostream, "bounding_box");
-                surface.transposed = deserialize!(U32IntoBool, V, ostream, "transposed").into();
-                surface.has_curve = deserialize!(bool, V, ostream, "has_curve");
-                if surface.has_curve {
-                    surface.curve = Some(deserialize!(Curve, V, ostream, "curve"));
-                }
+                surface = RevSurface::V2(deserialize!(v2::RevSurface, V, ostream, "v2 surface"));
             }
             _ => {}
         }
