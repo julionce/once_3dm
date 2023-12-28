@@ -331,11 +331,33 @@ where
     }
 }
 
-#[derive(Default, Deserialize)]
+#[derive(Default)]
 pub struct Class {
-    // TODO: move in_chunk to struct
-    #[in_chunk(OpenNurbsClass)]
     pub inner: ClassInner,
+}
+
+impl<V> Deserialize<V> for Class
+where
+    V: FileVersion,
+    chunk::Begin: Deserialize<V>,
+    ErrorStack: From<<chunk::Begin as Deserialize<V>>::Error>,
+{
+    type Error = ErrorStack;
+
+    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    where
+        T: once_io::OStream,
+    {
+        Ok(Class {
+            inner: deserialize!(
+                ChunkInStream::<{ TypeCode::OpenNurbsClass as u32 }, ClassInner>,
+                V,
+                ostream,
+                "inner"
+            )
+            .inner,
+        })
+    }
 }
 
 #[derive(Default, Deserialize)]
