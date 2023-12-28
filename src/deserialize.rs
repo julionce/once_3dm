@@ -271,6 +271,27 @@ where
     }
 }
 
+impl<V, T> Deserialize<V> for Option<T>
+where
+    V: FileVersion,
+    T: Deserialize<V>,
+    ErrorStack: From<<T as Deserialize<V>>::Error>,
+{
+    type Error = ErrorStack;
+
+    fn deserialize<U>(ostream: &mut U) -> Result<Self, Self::Error>
+    where
+        U: OStream,
+    {
+        let flag = deserialize!(bool, V, ostream, "flag");
+        if flag {
+            Ok(Some(deserialize!(T, V, ostream, "data")))
+        } else {
+            Ok(None)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::io::Cursor;
