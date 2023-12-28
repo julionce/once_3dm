@@ -11,6 +11,7 @@ use crate::{
     nurbs_curve::NurbsCurve,
     object_id::*,
     point::{Point, PointCloud},
+    poly_curve::PolyCurve,
     poly_line::PolyLineCurve,
     rollback::Rollback,
     type_code::TypeCode,
@@ -242,6 +243,7 @@ pub enum Data {
     NurbsCurve(NurbsCurve),
     Point(Point),
     PointCloud(PointCloud),
+    PolyCurve(PolyCurve),
     PolyLineCurve(PolyLineCurve),
 }
 
@@ -308,6 +310,14 @@ where
                 Kind::ArcCurve => Data::ArcCurve(
                     deserialize!(
                         ChunkInStream::<{ TypeCode::OpenNurbsClassData as u32 }, ArcCurve>,
+                        V,
+                        ostream
+                    )?
+                    .inner,
+                ),
+                Kind::PolyCurve => Data::PolyCurve(
+                    deserialize!(
+                        ChunkInStream::<{ TypeCode::OpenNurbsClassData as u32 }, PolyCurve>,
                         V,
                         ostream
                     )?
