@@ -1,6 +1,9 @@
+use once_3dm_macros::Deserialize;
+
 use crate::{
     arc::ArcCurve,
-    chunk, deserialize,
+    chunk::{self, Chunk},
+    deserialize,
     deserialize::{Deserialize, FileVersion},
     error::{Error, ErrorKind, ErrorStack},
     line::LineCurve,
@@ -8,6 +11,8 @@ use crate::{
     object,
     poly_curve::PolyCurve,
     poly_line::PolyLineCurve,
+    sequence::Sequence,
+    type_code::TypeCode,
 };
 
 pub enum Curve {
@@ -40,4 +45,18 @@ where
             _ => Err(ErrorStack::new(Error::Simple(ErrorKind::ObjectIsNotACurve))),
         }
     }
+}
+
+#[derive(Default, Deserialize)]
+#[with_version(short)]
+#[if_major_version(Eq(1))]
+pub struct ArrayV1 {
+    #[underlying_type(Sequence<u32, Curve>)]
+    pub data: Vec<Curve>,
+}
+
+#[derive(Default, Deserialize)]
+pub struct Array {
+    #[in_chunk(AnonymousChunk)]
+    pub v1: ArrayV1,
 }
