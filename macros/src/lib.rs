@@ -475,19 +475,7 @@ fn generate_chunk_trait_bounds_deserialize(struct_attrs: &StructAttrs) -> TokenS
         },
         false => quote! {},
     };
-    let with_version_trait_bounds = match struct_attrs.with_version {
-        WithVersion::Big => quote! {
-            chunk::BigVersion: Deserialize<V>,
-            ErrorStack: From<<chunk::BigVersion as Deserialize<V>>::Error>,
-        },
-        WithVersion::Short => quote! {
-            chunk::ShortVersion: Deserialize<V>,
-            ErrorStack: From<<chunk::ShortVersion as Deserialize<V>>::Error>,
-        },
-        WithVersion::None => quote! {},
-    };
     quote! {
-        #with_version_trait_bounds
         #chunk_begin_trait_bounds
     }
 }
