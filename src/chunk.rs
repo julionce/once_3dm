@@ -216,8 +216,8 @@ where
 
 #[derive(Default)]
 pub struct BigVersion {
-    pub major: u8,
-    pub minor: u8,
+    major: u8,
+    minor: u8,
 }
 
 impl<V> Deserialize<V> for BigVersion

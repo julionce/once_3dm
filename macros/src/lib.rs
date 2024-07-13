@@ -380,7 +380,7 @@ fn generate_enum_body_deserialize(
         .collect::<Vec<&TokenStream2>>();
     quote! {
         #chunk_version
-        match (version.major, version.minor) {
+        match (version.major(), version.minor()) {
             #(#variants),*,
             _ => Err(ErrorStack::new(Error::Simple(
                 ErrorKind::InvalidChunkVersion
