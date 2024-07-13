@@ -9,7 +9,7 @@ use crate::{
 };
 
 #[derive(Default, Deserialize)]
-#[with_version(short)]
+#[with_chunk_version(short)]
 #[if_major_version(Eq(1))]
 pub struct MeshParameters {
     #[underlying_type(U32IntoBool)]

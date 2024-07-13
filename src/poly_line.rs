@@ -15,7 +15,7 @@ pub struct PolyLine {
 }
 
 #[derive(Default, Deserialize)]
-#[with_version(short)]
+#[with_chunk_version(short)]
 pub struct PolyLineCurve {
     pub poly_line: PolyLine,
     #[underlying_type(Sequence<u32, f64>)]

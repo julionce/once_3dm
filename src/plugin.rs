@@ -54,7 +54,7 @@ pub struct PluginV1_2 {
 }
 
 #[derive(Default, Deserialize)]
-#[with_version(big)]
+#[with_chunk_version(big)]
 pub enum Plugin {
     #[default]
     Empty,
@@ -73,7 +73,7 @@ pub struct PluginRef {
 }
 
 #[derive(Default, Deserialize)]
-#[with_version(short)]
+#[with_chunk_version(short)]
 #[if_major_version(Eq(1))]
 pub struct PluginList {
     #[underlying_type(Sequence<u32, PluginRef>)]

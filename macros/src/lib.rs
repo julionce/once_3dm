@@ -5,7 +5,7 @@ use syn::{parse_macro_input, Data, DeriveInput, Fields};
 
 struct StructAttrs {
     table: TableAttr,
-    with_version: WithVersion,
+    with_chunk_version: WithChunkVersion,
     if_version: IfVersion,
 }
 
@@ -13,34 +13,36 @@ impl StructAttrs {
     fn parse(attrs: &Vec<syn::Attribute>) -> Self {
         Self {
             table: TableAttr::parse(attrs),
-            with_version: WithVersion::parse(attrs),
+            with_chunk_version: WithChunkVersion::parse(attrs),
             if_version: IfVersion::parse(attrs),
         }
     }
 }
 
 struct EnumAttrs {
-    with_version: WithVersion,
+    with_chunk_version: WithChunkVersion,
 }
 
 impl EnumAttrs {
     fn parse(attrs: &Vec<syn::Attribute>) -> Self {
         Self {
-            with_version: WithVersion::parse(attrs),
+            with_chunk_version: WithChunkVersion::parse(attrs),
         }
     }
 }
 
-// TODO: rename by WithChunkVersion
-enum WithVersion {
+enum WithChunkVersion {
     Short,
     Big,
     None,
 }
 
-impl WithVersion {
+impl WithChunkVersion {
     fn parse(attrs: &Vec<syn::Attribute>) -> Self {
-        match attrs.iter().find(|attr| attr.path.is_ident("with_version")) {
+        match attrs
+            .iter()
+            .find(|attr| attr.path.is_ident("with_chunk_version"))
+        {
             Some(attr) => match attr.parse_args::<syn::Path>() {
                 Ok(expr) => {
                     if expr.is_ident("short") {
@@ -262,7 +264,7 @@ impl FieldAttrs {
         table,
         field,
         in_chunk,
-        with_version,
+        with_chunk_version,
         if_major_version,
         if_minor_version,
         if_chunk_version,
@@ -366,7 +368,7 @@ fn generate_enum_body_deserialize(
     ident: &syn::Ident,
     enum_attrs: &EnumAttrs,
 ) -> TokenStream2 {
-    let chunk_version = generate_version_deserialize(&enum_attrs.with_version);
+    let chunk_version = generate_chunk_version_deserialize(&enum_attrs.with_chunk_version);
     let raw_variants = data
         .variants
         .iter()
@@ -526,7 +528,7 @@ fn generate_type_trait_bounds_deserialize(fields: &syn::Fields) -> Vec<TokenStre
 }
 
 fn generate_body_deserialize(data: &syn::DataStruct, struct_attrs: &StructAttrs) -> TokenStream2 {
-    let version_deserialize = generate_version_deserialize(&struct_attrs.with_version);
+    let version_deserialize = generate_chunk_version_deserialize(&struct_attrs.with_chunk_version);
     let body_core = generate_body_core_deserialize(data, struct_attrs);
     let condition = generate_if_version_condition(&struct_attrs.if_version);
     quote! {
@@ -576,16 +578,15 @@ fn generate_body_core_deserialize(
     }
 }
 
-// TODO: rename by chunk_version
-fn generate_version_deserialize(with_version: &WithVersion) -> TokenStream2 {
-    match with_version {
-        WithVersion::Big => {
+fn generate_chunk_version_deserialize(with_chunk_version: &WithChunkVersion) -> TokenStream2 {
+    match with_chunk_version {
+        WithChunkVersion::Big => {
             quote!(let version = deserialize!(chunk::BigVersion, V, ostream, "version");)
         }
-        WithVersion::Short => {
+        WithChunkVersion::Short => {
             quote!(let version = deserialize!(chunk::ShortVersion, V, ostream, "version");)
         }
-        WithVersion::None => quote!(),
+        WithChunkVersion::None => quote!(),
     }
 }
 

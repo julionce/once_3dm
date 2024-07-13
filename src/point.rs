@@ -13,7 +13,7 @@ use crate::{
 };
 
 #[derive(Default, Deserialize)]
-#[with_version(short)]
+#[with_chunk_version(short)]
 #[if_major_version(Eq(1))]
 pub struct Point {
     pub x: f64,
@@ -43,7 +43,7 @@ pub struct Point4D {
 }
 
 #[derive(Default, Deserialize)]
-#[with_version(short)]
+#[with_chunk_version(short)]
 #[if_major_version(Eq(1))]
 pub struct PointCloud {
     #[underlying_type(Sequence<u32, Point3D>)]

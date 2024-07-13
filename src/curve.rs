@@ -48,7 +48,7 @@ where
 }
 
 #[derive(Default, Deserialize)]
-#[with_version(short)]
+#[with_chunk_version(short)]
 #[if_major_version(Eq(1))]
 pub struct ArrayV1 {
     #[underlying_type(Sequence<u32, Curve>)]
