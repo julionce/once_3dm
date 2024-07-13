@@ -19,6 +19,19 @@ impl StructAttrs {
     }
 }
 
+struct EnumAttrs {
+    with_version: WithVersion,
+}
+
+impl EnumAttrs {
+    fn parse(attrs: &Vec<syn::Attribute>) -> Self {
+        Self {
+            with_version: WithVersion::parse(attrs),
+        }
+    }
+}
+
+// TODO: rename by WithChunkVersion
 enum WithVersion {
     Short,
     Big,
@@ -127,6 +140,45 @@ impl IfVersion {
     }
 }
 
+struct IfChunkVersion {
+    major: u8,
+    minor: u8,
+}
+
+impl IfChunkVersion {
+    fn parse(attrs: &Vec<syn::Attribute>) -> Option<Self> {
+        match attrs
+            .iter()
+            .find(|attr| attr.path.is_ident("if_chunk_version"))
+        {
+            Some(attr) => match attr.parse_args::<syn::ExprTuple>() {
+                Ok(tuple) => match tuple.elems.len() {
+                    2 => {
+                        let major = match tuple.elems.first().unwrap() {
+                            syn::Expr::Lit(lit) => match &lit.lit {
+                                syn::Lit::Int(int) => int.base10_parse::<u8>().unwrap(),
+                                _ => panic!(),
+                            },
+                            _ => panic!(),
+                        };
+                        let minor = match tuple.elems.last().unwrap() {
+                            syn::Expr::Lit(lit) => match &lit.lit {
+                                syn::Lit::Int(int) => int.base10_parse::<u8>().unwrap(),
+                                _ => panic!(),
+                            },
+                            _ => panic!(),
+                        };
+                        Some(IfChunkVersion { major, minor })
+                    }
+                    _ => panic!(),
+                },
+                _ => panic!(),
+            },
+            None => None,
+        }
+    }
+}
+
 fn generate_if_version_condition(if_version: &IfVersion) -> TokenStream2 {
     match (&if_version.major, &if_version.minor) {
         (None, None) => quote!(true),
@@ -213,6 +265,7 @@ impl FieldAttrs {
         with_version,
         if_major_version,
         if_minor_version,
+        if_chunk_version,
         padding,
         underlying_type
     )
@@ -223,8 +276,9 @@ pub fn deserialize_derive(input: TokenStream) -> TokenStream {
     }: DeriveInput = parse_macro_input!(input as DeriveInput);
     match data {
         Data::Struct(data_struct) => process_data_struct(&data_struct, &ident, &attrs),
+        Data::Enum(data_enum) => process_data_enum(&data_enum, &ident, &attrs),
         _ => {
-            quote!()
+            panic!("data type not supported")
         }
     }
     .into()
@@ -237,6 +291,142 @@ fn process_data_struct(
 ) -> TokenStream2 {
     let struct_attrs = StructAttrs::parse(&attrs);
     generate_deserialize(data, ident, &struct_attrs)
+}
+
+fn process_data_enum(
+    data: &syn::DataEnum,
+    ident: &syn::Ident,
+    attrs: &Vec<syn::Attribute>,
+) -> TokenStream2 {
+    let enum_attrs = EnumAttrs::parse(&attrs);
+    generate_enum_deserialize(data, ident, &enum_attrs)
+}
+
+fn generate_enum_deserialize(
+    data: &syn::DataEnum,
+    ident: &syn::Ident,
+    enum_attrs: &EnumAttrs,
+) -> TokenStream2 {
+    let header = generate_enum_header_deserialize(data, ident);
+    let body = generate_enum_body_deserialize(data, ident, enum_attrs);
+    quote! {
+        #header
+        {
+            type Error = ErrorStack;
+
+            fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+            where
+                T: once_io::OStream
+            {
+                #body
+            }
+        }
+    }
+}
+
+fn generate_enum_header_deserialize(data: &syn::DataEnum, ident: &syn::Ident) -> TokenStream2 {
+    let trait_bounds = generate_enum_trait_bounds_deserialize(data);
+    quote! {
+        impl<V> Deserialize<V> for #ident
+        where
+            V: FileVersion,
+            #(#trait_bounds)*
+    }
+}
+
+fn generate_enum_trait_bounds_deserialize(data: &syn::DataEnum) -> Vec<TokenStream2> {
+    data.variants
+        .iter()
+        .map(|variant| match &variant.fields {
+            Fields::Unnamed(unnamed_fields) => unnamed_fields
+                .unnamed
+                .iter()
+                .map(|field| {
+                    let ty = match &field.ty {
+                        syn::Type::Path(value) => {
+                            quote!(#value)
+                        }
+                        _ => panic!(),
+                    };
+                    quote! {
+                        #ty: Deserialize<V>,
+                        ErrorStack: From<<#ty as Deserialize<V>>::Error>,
+                    }
+                })
+                .collect::<Vec<TokenStream2>>(),
+            Fields::Unit => Vec::<TokenStream2>::new(),
+            _ => panic!(),
+        })
+        .flatten()
+        .collect::<Vec<TokenStream2>>()
+}
+
+fn generate_enum_body_deserialize(
+    data: &syn::DataEnum,
+    ident: &syn::Ident,
+    enum_attrs: &EnumAttrs,
+) -> TokenStream2 {
+    let chunk_version = generate_version_deserialize(&enum_attrs.with_version);
+    let raw_variants = data
+        .variants
+        .iter()
+        .map(|variant| generate_enum_variant_deserialize(&ident, &variant))
+        .collect::<Vec<TokenStream2>>();
+    let variants = raw_variants
+        .iter()
+        .filter(|item| !item.is_empty())
+        .collect::<Vec<&TokenStream2>>();
+    quote! {
+        #chunk_version
+        match (version.major, version.minor) {
+            #(#variants),*,
+            _ => Err(ErrorStack::new(Error::Simple(
+                ErrorKind::InvalidChunkVersion
+            )))
+        }
+    }
+}
+
+fn generate_enum_variant_deserialize(ident: &syn::Ident, variant: &syn::Variant) -> TokenStream2 {
+    let variant_ident = &variant.ident;
+    let variant_ident_str = variant_ident.to_string();
+    let fields = match &variant.fields {
+        Fields::Unnamed(unnamed_fields) => unnamed_fields
+            .unnamed
+            .iter()
+            .map(|field| {
+                let ty = match &field.ty {
+                    syn::Type::Path(value) => {
+                        quote!(#value)
+                    }
+                    _ => panic!(),
+                };
+                quote! {
+                    deserialize!(#ty, V, ostream, #variant_ident_str)
+                }
+            })
+            .collect::<Vec<TokenStream2>>(),
+        Fields::Unit => Vec::<TokenStream2>::new(),
+        _ => panic!(),
+    };
+    match fields.is_empty() {
+        false => {
+            let chunk_version = match IfChunkVersion::parse(&variant.attrs) {
+                Some(v) => generate_if_chunk_version_deserialize(&v),
+                None => panic!("1"),
+            };
+            quote! {
+                #chunk_version => Ok(#ident::#variant_ident (#(#fields),*))
+            }
+        }
+        true => quote!(),
+    }
+}
+
+fn generate_if_chunk_version_deserialize(if_chunk_version: &IfChunkVersion) -> TokenStream2 {
+    let major = if_chunk_version.major;
+    let minor = if_chunk_version.minor;
+    quote!( (#major, #minor) )
 }
 
 fn generate_deserialize(
@@ -398,6 +588,7 @@ fn generate_body_core_deserialize(
     }
 }
 
+// TODO: rename by chunk_version
 fn generate_version_deserialize(with_version: &WithVersion) -> TokenStream2 {
     match with_version {
         WithVersion::Big => {
