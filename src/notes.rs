@@ -11,7 +11,7 @@ pub struct Notes {
     pub visible: i32,
     pub window_left: i32,
     pub window_right: i32,
-    pub window_botton: i32,
+    pub window_bottom: i32,
     pub data: String,
     pub html_encoded: Option<i32>,
 }
@@ -25,7 +25,7 @@ mod v1 {
         pub window_left: i32,
         pub window_top: i32,
         pub window_right: i32,
-        pub window_botton: i32,
+        pub window_bottom: i32,
         pub data: String,
     }
 }
@@ -42,7 +42,7 @@ mod v2 {
         pub visible: i32,
         pub window_left: i32,
         pub window_right: i32,
-        pub window_botton: i32,
+        pub window_bottom: i32,
     }
 }
 
@@ -82,7 +82,7 @@ impl From<v1::Notes> for Notes {
             visible: value.visible,
             window_left: value.window_left,
             window_right: value.window_right,
-            window_botton: value.window_botton,
+            window_bottom: value.window_bottom,
             data: value.data,
             html_encoded: None,
         }
@@ -95,7 +95,7 @@ impl From<v2::Notes> for Notes {
             visible: value.visible,
             window_left: value.window_left,
             window_right: value.window_right,
-            window_botton: value.window_botton,
+            window_bottom: value.window_bottom,
             data: value.data,
             html_encoded: Some(value.html_encoded),
         }
