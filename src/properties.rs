@@ -12,7 +12,6 @@ use crate::{
     type_code::TypeCode,
 };
 use once_3dm_macros::Deserialize;
-use once_io::OStream;
 use std::io::{Seek, SeekFrom};
 
 #[derive(Default)]
@@ -49,15 +48,15 @@ mod v1 {
     {
         type Error = ErrorStack;
 
-        fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+        fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
         where
-            T: OStream,
+            T: std::io::Read + std::io::Seek,
         {
             let mut properties = Properties::default();
 
             loop {
-                let begin = deserialize!(chunk::Begin, V, ostream, "begin");
-                let input = &mut ostream.ochunk(Some(begin.length));
+                let begin = deserialize!(chunk::Begin, V, stream, "begin");
+                let input = &mut stream.borrow_chunk(Some(begin.length)).unwrap();
                 match begin.type_code {
                     TypeCode::Summary => {
                         properties.revision_history =
@@ -182,76 +181,76 @@ impl From<v2::Properties> for Properties {
 impl Deserialize<V1> for Properties {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v1::Properties as Deserialize<V1>>::deserialize(ostream)?.into())
+        Ok(<v1::Properties as Deserialize<V1>>::deserialize(stream)?.into())
     }
 }
 
 impl Deserialize<V2> for Properties {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v2::Properties as Deserialize<V2>>::deserialize(ostream)?.into())
+        Ok(<v2::Properties as Deserialize<V2>>::deserialize(stream)?.into())
     }
 }
 
 impl Deserialize<V3> for Properties {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v3::Properties as Deserialize<V3>>::deserialize(ostream)?.into())
+        Ok(<v3::Properties as Deserialize<V3>>::deserialize(stream)?.into())
     }
 }
 
 impl Deserialize<V4> for Properties {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v4::Properties as Deserialize<V4>>::deserialize(ostream)?.into())
+        Ok(<v4::Properties as Deserialize<V4>>::deserialize(stream)?.into())
     }
 }
 
 impl Deserialize<V50> for Properties {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v50::Properties as Deserialize<V50>>::deserialize(ostream)?.into())
+        Ok(<v50::Properties as Deserialize<V50>>::deserialize(stream)?.into())
     }
 }
 
 impl Deserialize<V60> for Properties {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v60::Properties as Deserialize<V60>>::deserialize(ostream)?.into())
+        Ok(<v60::Properties as Deserialize<V60>>::deserialize(stream)?.into())
     }
 }
 
 impl Deserialize<V70> for Properties {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v70::Properties as Deserialize<V70>>::deserialize(ostream)?.into())
+        Ok(<v70::Properties as Deserialize<V70>>::deserialize(stream)?.into())
     }
 }

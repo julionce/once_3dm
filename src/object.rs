@@ -3,7 +3,7 @@ use once_3dm_macros::Deserialize;
 
 use crate::{
     arc::ArcCurve,
-    chunk::{self, Chunk, ChunkInStream},
+    chunk::{self, Chunk},
     deserialize,
     deserialize::{Deserialize, FileVersion},
     error::{Error, ErrorKind, ErrorStack},
@@ -263,15 +263,15 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
         let mut class = ClassInner::default();
         let uuid = deserialize!(
             Chunk::<{ TypeCode::OpenNurbsClassUuid as u32 }, Uuid>,
             V,
-            ostream,
+            stream,
             "uuid"
         )
         .inner;
@@ -279,65 +279,65 @@ where
             Ok(kind) => match kind {
                 Kind::NurbsCurve => Data::NurbsCurve(
                     deserialize!(
-                        ChunkInStream::<{ TypeCode::OpenNurbsClassData as u32 }, NurbsCurve>,
+                        Chunk::<{ TypeCode::OpenNurbsClassData as u32 }, NurbsCurve>,
                         V,
-                        ostream
+                        stream
                     )?
                     .inner,
                 ),
                 Kind::Point => Data::Point(
                     deserialize!(
-                        ChunkInStream::<{ TypeCode::OpenNurbsClassData as u32 }, Point>,
+                        Chunk::<{ TypeCode::OpenNurbsClassData as u32 }, Point>,
                         V,
-                        ostream
+                        stream
                     )?
                     .inner,
                 ),
                 Kind::PointCloud => Data::PointCloud(
                     deserialize!(
-                        ChunkInStream::<{ TypeCode::OpenNurbsClassData as u32 }, PointCloud>,
+                        Chunk::<{ TypeCode::OpenNurbsClassData as u32 }, PointCloud>,
                         V,
-                        ostream
+                        stream
                     )?
                     .inner,
                 ),
                 Kind::LineCurve => Data::LineCurve(
                     deserialize!(
-                        ChunkInStream::<{ TypeCode::OpenNurbsClassData as u32 }, LineCurve>,
+                        Chunk::<{ TypeCode::OpenNurbsClassData as u32 }, LineCurve>,
                         V,
-                        ostream
+                        stream
                     )?
                     .inner,
                 ),
                 Kind::ArcCurve => Data::ArcCurve(
                     deserialize!(
-                        ChunkInStream::<{ TypeCode::OpenNurbsClassData as u32 }, ArcCurve>,
+                        Chunk::<{ TypeCode::OpenNurbsClassData as u32 }, ArcCurve>,
                         V,
-                        ostream
+                        stream
                     )?
                     .inner,
                 ),
                 Kind::PolyCurve => Data::PolyCurve(
                     deserialize!(
-                        ChunkInStream::<{ TypeCode::OpenNurbsClassData as u32 }, PolyCurve>,
+                        Chunk::<{ TypeCode::OpenNurbsClassData as u32 }, PolyCurve>,
                         V,
-                        ostream
+                        stream
                     )?
                     .inner,
                 ),
                 Kind::PolyLineCurve => Data::PolyLineCurve(
                     deserialize!(
-                        ChunkInStream::<{ TypeCode::OpenNurbsClassData as u32 }, PolyLineCurve>,
+                        Chunk::<{ TypeCode::OpenNurbsClassData as u32 }, PolyLineCurve>,
                         V,
-                        ostream
+                        stream
                     )?
                     .inner,
                 ),
                 Kind::RevSurface => Data::RevSurface(
                     deserialize!(
-                        ChunkInStream::<{ TypeCode::OpenNurbsClassData as u32 }, RevSurface>,
+                        Chunk::<{ TypeCode::OpenNurbsClassData as u32 }, RevSurface>,
                         V,
-                        ostream
+                        stream
                     )?
                     .inner,
                 ),
@@ -364,15 +364,15 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
         Ok(Class {
             inner: deserialize!(
-                ChunkInStream::<{ TypeCode::OpenNurbsClass as u32 }, ClassInner>,
+                Chunk::<{ TypeCode::OpenNurbsClass as u32 }, ClassInner>,
                 V,
-                ostream,
+                stream,
                 "inner"
             )
             .inner,
@@ -400,20 +400,20 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
         let mut records = vec![];
         loop {
-            let type_code = deserialize!(Rollback<TypeCode>, V, ostream, "type_code").inner;
+            let type_code = deserialize!(Rollback<TypeCode>, V, stream, "type_code").inner;
             match type_code {
                 TypeCode::ObjectRecord => {
                     records.push(
                         deserialize!(
                             Chunk::<{ TypeCode::ObjectRecord as u32 }, Record>,
                             V,
-                            ostream,
+                            stream,
                             "record"
                         )
                         .inner,

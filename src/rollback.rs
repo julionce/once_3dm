@@ -4,7 +4,7 @@ use crate::{
     error::{Error, ErrorStack},
 };
 
-use std::io::SeekFrom;
+use std::io::{Seek, SeekFrom};
 
 pub struct Rollback<T> {
     pub inner: T,
@@ -18,20 +18,20 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<S>(ostream: &mut S) -> Result<Self, Self::Error>
+    fn deserialize<S>(stream: &mut once_io::Stream<S>) -> Result<Self, Self::Error>
     where
-        S: once_io::OStream,
+        S: std::io::Read + std::io::Seek,
     {
-        let rollback_position = match ostream.stream_position() {
+        let rollback_position = match stream.stream_position() {
             Ok(ok) => ok,
             Err(e) => {
                 return Err(ErrorStack::new(Error::IoError(e)));
             }
         };
         let ret = Self {
-            inner: deserialize!(T, V, ostream, "inner"),
+            inner: deserialize!(T, V, stream, "inner"),
         };
-        match ostream.seek(SeekFrom::Start(rollback_position)) {
+        match stream.seek(SeekFrom::Start(rollback_position)) {
             Ok(_) => (),
             Err(e) => {
                 return Err(ErrorStack::new(Error::IoError(e)));

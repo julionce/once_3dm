@@ -1,5 +1,3 @@
-use once_io::OStream;
-
 use crate::{
     bounding_box::BoundingBox,
     chunk::{self},
@@ -26,22 +24,21 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
         let mut curve = PolyCurve::default();
-        let _version = deserialize!(chunk::ShortVersion, V, ostream, "version");
-        curve.segments_count = deserialize!(u32, V, ostream, "segments_count");
-        deserialize!(u32, V, ostream, "reserved_1");
-        deserialize!(u32, V, ostream, "reserved_2");
-        curve.bounding_box = deserialize!(BoundingBox, V, ostream, "bounding_box");
-        curve.segment_params =
-            deserialize!(Sequence<u32, f64>, V, ostream, "segment_params").into();
+        let _version = deserialize!(chunk::ShortVersion, V, stream, "version");
+        curve.segments_count = deserialize!(u32, V, stream, "segments_count");
+        deserialize!(u32, V, stream, "reserved_1");
+        deserialize!(u32, V, stream, "reserved_2");
+        curve.bounding_box = deserialize!(BoundingBox, V, stream, "bounding_box");
+        curve.segment_params = deserialize!(Sequence<u32, f64>, V, stream, "segment_params").into();
         for _ in 0..curve.segments_count {
             curve
                 .segments
-                .push(deserialize!(Curve, V, ostream, "segment"));
+                .push(deserialize!(Curve, V, stream, "segment"));
         }
         // TODO: remove fuzz and nesting.
         Ok(curve)

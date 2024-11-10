@@ -22,11 +22,11 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<U>(ostream: &mut U) -> Result<Self, Self::Error>
+    fn deserialize<U>(stream: &mut once_io::Stream<U>) -> Result<Self, Self::Error>
     where
-        U: once_io::OStream,
+        U: std::io::Read + std::io::Seek,
     {
-        let len = match deserialize!(S, V, ostream, "length").try_into() {
+        let len = match deserialize!(S, V, stream, "length").try_into() {
             Ok(ok) => ok,
             Err(_) => {
                 let mut stack = ErrorStack::new(Error::Simple(ErrorKind::InvalidSequenceLength));
@@ -36,7 +36,7 @@ where
         };
         let mut data: Vec<T> = vec![];
         for _ in 0..len {
-            data.push(deserialize!(T, V, ostream, "member"));
+            data.push(deserialize!(T, V, stream, "member"));
         }
         Ok(Self {
             inner: data,

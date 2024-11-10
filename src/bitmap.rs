@@ -8,8 +8,6 @@ use crate::{
     error::{Error, ErrorKind, ErrorStack},
 };
 
-use once_io::OStream;
-
 use once_3dm_macros::Deserialize;
 
 #[derive(Default)]
@@ -73,18 +71,21 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
         let mut bitmap = Bitmap::default();
-        bitmap.header = deserialize!(Header, V, ostream, "header");
+        bitmap.header = deserialize!(Header, V, stream, "header");
         let palette_limit = bitmap.palette_color_count() as u64 * size_of::<Color>() as u64;
         let image_limit = bitmap.header.size_image as u64;
-        let mut palette_and_image_chunk = ostream.ochunk(Some(palette_limit + image_limit));
-        let mut palette_chunk = palette_and_image_chunk.ochunk(Some(palette_limit));
+        let mut palette_and_image_chunk = stream
+            .borrow_chunk(Some(palette_limit + image_limit))
+            .unwrap();
+        let mut palette_chunk = palette_and_image_chunk
+            .borrow_chunk(Some(palette_limit))
+            .unwrap();
         bitmap.palette = deserialize!(Palette, V, &mut palette_chunk, "palette");
-        palette_and_image_chunk = palette_chunk.into_inner();
         bitmap.pixels = deserialize!(Pixels, V, &mut palette_and_image_chunk, "pixels");
         Ok(bitmap)
     }
@@ -108,17 +109,17 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
         let mut bitmap = Bitmap::default();
-        bitmap.header = deserialize!(Header, V, ostream, "header");
+        bitmap.header = deserialize!(Header, V, stream, "header");
 
         let palette_limit = bitmap.palette_color_count() as u64 * size_of::<Color>() as u64;
         let image_limit = bitmap.header.size_image as u64;
 
-        let buffer = deserialize!(CompressedBuffer, V, ostream, "buffer");
+        let buffer = deserialize!(CompressedBuffer, V, stream, "buffer");
         if buffer.size == palette_limit + image_limit {
             // TODO: conver Vec<u8> to Palette
             // bitmap.palette = buffer.inner[..palette_limit];
@@ -127,7 +128,7 @@ where
         } else if buffer.size == palette_limit {
             // TODO: conver Vec<u8> to Palette
             // bitmap.palette = buffer.inner;
-            let buffer = deserialize!(CompressedBuffer, V, ostream, "buffer");
+            let buffer = deserialize!(CompressedBuffer, V, stream, "buffer");
             if buffer.size == image_limit {
                 Ok(Self { inner: bitmap })
             } else {

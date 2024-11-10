@@ -194,18 +194,18 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
         let mut ret = UnitsAndTolerances::default();
-        let version = deserialize!(u32, V, ostream, "version");
+        let version = deserialize!(u32, V, stream, "version");
         if 100 <= version && 200 > version {
             let mut meters_per_unit = 1.0f64;
             let mut custom_unit_name = String::default();
 
             let unit_system: LengthUnitSystem =
-                match deserialize!(u32, V, ostream, "unit_system").try_into() {
+                match deserialize!(u32, V, stream, "unit_system").try_into() {
                     Ok(ok) => ok,
                     Err(e) => {
                         let mut ret = ErrorStack::new(e);
@@ -213,12 +213,12 @@ where
                         return Err(ret);
                     }
                 };
-            ret.absolute_tolerance = deserialize!(f64, V, ostream, "absolute_tolerance");
-            ret.angle_tolerance = deserialize!(f64, V, ostream, "angle_tolerance");
-            ret.relative_tolerance = deserialize!(f64, V, ostream, "relative_tolerance");
+            ret.absolute_tolerance = deserialize!(f64, V, stream, "absolute_tolerance");
+            ret.angle_tolerance = deserialize!(f64, V, stream, "angle_tolerance");
+            ret.relative_tolerance = deserialize!(f64, V, stream, "relative_tolerance");
             if 101 <= version {
                 ret.distance_display_mode =
-                    match deserialize!(u32, V, ostream, "distance_display_mode").try_into() {
+                    match deserialize!(u32, V, stream, "distance_display_mode").try_into() {
                         Ok(ok) => ok,
                         Err(e) => {
                             let mut ret = ErrorStack::new(e);
@@ -227,13 +227,13 @@ where
                         }
                     };
                 ret.distance_display_precission =
-                    deserialize!(i32, V, ostream, "distance_display_precission");
+                    deserialize!(i32, V, stream, "distance_display_precission");
                 if 0 > ret.distance_display_precission || 20 < ret.distance_display_precission {
                     ret.distance_display_precission = 3;
                 }
                 if 102 <= version {
-                    meters_per_unit = deserialize!(f64, V, ostream, "meters_per_unit");
-                    custom_unit_name = deserialize!(String, V, ostream, "custom_unit_name");
+                    meters_per_unit = deserialize!(f64, V, stream, "meters_per_unit");
+                    custom_unit_name = deserialize!(String, V, stream, "custom_unit_name");
                 }
             }
             ret.unit_system = match unit_system {

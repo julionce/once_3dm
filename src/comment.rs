@@ -1,6 +1,3 @@
-use once_io::OStream;
-use std::io::Read;
-
 use crate::{
     chunk::Begin,
     deserialize,
@@ -8,6 +5,8 @@ use crate::{
     error::{Error, ErrorKind, ErrorStack},
     type_code::TypeCode,
 };
+
+use std::io::Read;
 
 pub struct Comment(String);
 
@@ -25,13 +24,13 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        let begin = deserialize!(Begin, V, ostream, "begin");
+        let begin = deserialize!(Begin, V, stream, "begin");
         if TypeCode::CommentBlock == begin.type_code {
-            let mut chunk = ostream.ochunk(Some(begin.length));
+            let mut chunk = stream.borrow_chunk(Some(begin.length)).unwrap();
             let mut string = String::new();
             match chunk.read_to_string(&mut string) {
                 Ok(_) => Ok(Comment(string)),

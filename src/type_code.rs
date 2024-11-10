@@ -246,11 +246,11 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        let primitive = deserialize!(u32, V, ostream)?;
+        let primitive = deserialize!(u32, V, stream)?;
         match TypeCode::try_from(primitive) {
             Ok(ok) => Ok(ok),
             //TODO: improve error using the returned error

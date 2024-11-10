@@ -25,21 +25,21 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
         let mut curve = NurbsCurve::default();
-        let version = deserialize!(chunk::ShortVersion, V, ostream, "version");
+        let version = deserialize!(chunk::ShortVersion, V, stream, "version");
         if 1 == version.major() {
-            curve.dimension = deserialize!(u32, V, ostream, "dimension");
-            curve.is_rational = deserialize!(U32IntoBool, V, ostream, "is_rational").into();
-            curve.order = deserialize!(u32, V, ostream, "order");
-            curve.control_vertex_count = deserialize!(u32, V, ostream, "control_vertex_count");
-            deserialize!(u32, V, ostream)?;
-            deserialize!(u32, V, ostream)?;
-            curve.bounding_box = deserialize!(BoundingBox, V, ostream, "bounding_box");
-            let knots_count = deserialize!(u32, V, ostream, "knots_count");
+            curve.dimension = deserialize!(u32, V, stream, "dimension");
+            curve.is_rational = deserialize!(U32IntoBool, V, stream, "is_rational").into();
+            curve.order = deserialize!(u32, V, stream, "order");
+            curve.control_vertex_count = deserialize!(u32, V, stream, "control_vertex_count");
+            deserialize!(u32, V, stream)?;
+            deserialize!(u32, V, stream)?;
+            curve.bounding_box = deserialize!(BoundingBox, V, stream, "bounding_box");
+            let knots_count = deserialize!(u32, V, stream, "knots_count");
             if (i32::MAX as u32) < knots_count {
                 return Err(ErrorStack::new(Error::Simple(ErrorKind::InvalidKnotsCount)));
             }
@@ -57,9 +57,9 @@ where
                 }
             }
             for _ in 0..knots_count {
-                curve.knots.push(deserialize!(f64, V, ostream, "knot"));
+                curve.knots.push(deserialize!(f64, V, stream, "knot"));
             }
-            let _count = deserialize!(u32, V, ostream, "count");
+            let _count = deserialize!(u32, V, stream, "count");
             let control_vertexes_size = match (curve.dimension, curve.is_rational) {
                 (0, _) => 0u32,
                 (d, true) => d + 1,
@@ -68,12 +68,12 @@ where
             for _ in 0..curve.control_vertex_count {
                 let mut row: Vec<f64> = vec![];
                 for _ in 0..control_vertexes_size {
-                    row.push(deserialize!(f64, V, ostream, "vertex"));
+                    row.push(deserialize!(f64, V, stream, "vertex"));
                 }
                 curve.control_vertexes.push(row);
             }
             if 1 <= version.minor() {
-                curve.sub_d_friendly_tag = deserialize!(bool, V, ostream, "sub_d_friendly_tag");
+                curve.sub_d_friendly_tag = deserialize!(bool, V, stream, "sub_d_friendly_tag");
             }
         }
         Ok(curve)

@@ -1,5 +1,5 @@
 use crate::error::{Error, ErrorKind, ErrorStack};
-use once_io::OStream;
+
 use std::io::Read;
 
 use std::mem;
@@ -33,18 +33,18 @@ where
 {
     type Error: Into<ErrorStack>;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream;
+        T: std::io::Read + std::io::Seek;
 }
 
 #[macro_export]
 macro_rules! deserialize {
-    ($type: ty, $version: ty, $ostream: expr) => {
-        <$type as Deserialize<$version>>::deserialize($ostream)
+    ($type: ty, $version: ty, $stream: expr) => {
+        <$type as Deserialize<$version>>::deserialize($stream)
     };
-    ($type: ty, $version: ty, $ostream: expr, $member: tt) => {
-        match <$type as Deserialize<$version>>::deserialize($ostream) {
+    ($type: ty, $version: ty, $stream: expr, $member: tt) => {
+        match <$type as Deserialize<$version>>::deserialize($stream) {
             Ok(ok) => ok,
             Err(e) => {
                 let mut stack: ErrorStack = From::from(e);
@@ -61,9 +61,9 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<T>(_ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(_stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
         Ok(())
     }
@@ -77,12 +77,12 @@ macro_rules! impl_deserialize_for_num {
         {
             type Error = ErrorStack;
 
-            fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+            fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
             where
-                T: OStream,
+                T: std::io::Read + std::io::Seek,
             {
                 let mut buf = [0u8; mem::size_of::<$type>()];
-                match ostream.read_exact(&mut buf) {
+                match stream.read_exact(&mut buf) {
                     Ok(()) => Ok(<$type>::from_le_bytes(buf)),
                     Err(e) => Err(ErrorStack::new(Error::IoError(e))),
                 }
@@ -112,12 +112,12 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
         //TODO: check if values distinct from 0 or 1 are valid.
-        let inner = deserialize!(u8, V, ostream)?;
+        let inner = deserialize!(u8, V, stream)?;
         Ok(0 < inner)
     }
 }
@@ -125,13 +125,13 @@ where
 impl Deserialize<V1> for String {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        let length = deserialize!(u32, V1, ostream, "length");
+        let length = deserialize!(u32, V1, stream, "length");
         let mut string = String::new();
-        match ostream.take(length as u64).read_to_string(&mut string) {
+        match stream.take(length as u64).read_to_string(&mut string) {
             Ok(size) => {
                 if size as u64 == length as u64 {
                     Ok(string)
@@ -149,17 +149,17 @@ impl Deserialize<V1> for String {
 impl Deserialize<V2> for String {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        let length = <u32 as Deserialize<V2>>::deserialize(ostream)?;
+        let length = <u32 as Deserialize<V2>>::deserialize(stream)?;
         if 0 < length {
             let mut buf: Vec<u16> = vec![];
             for _ in 0..(length - 1) {
-                buf.push(<u16 as Deserialize<V2>>::deserialize(ostream)?);
+                buf.push(<u16 as Deserialize<V2>>::deserialize(stream)?);
             }
-            <u16 as Deserialize<V2>>::deserialize(ostream)?;
+            <u16 as Deserialize<V2>>::deserialize(stream)?;
             match String::from_utf16(&buf) {
                 Ok(string) => Ok(string),
                 Err(e) => Err(ErrorStack::new(Error::FromUtf16Error(e))),
@@ -173,55 +173,55 @@ impl Deserialize<V2> for String {
 impl Deserialize<V3> for String {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        deserialize!(String, V2, ostream)
+        deserialize!(String, V2, stream)
     }
 }
 
 impl Deserialize<V4> for String {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        deserialize!(String, V2, ostream)
+        deserialize!(String, V2, stream)
     }
 }
 
 impl Deserialize<V50> for String {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        deserialize!(String, V2, ostream)
+        deserialize!(String, V2, stream)
     }
 }
 
 impl Deserialize<V60> for String {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        deserialize!(String, V2, ostream)
+        deserialize!(String, V2, stream)
     }
 }
 
 impl Deserialize<V70> for String {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        deserialize!(String, V2, ostream)
+        deserialize!(String, V2, stream)
     }
 }
 
@@ -233,16 +233,16 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<U>(ostream: &mut U) -> Result<Self, Self::Error>
+    fn deserialize<U>(stream: &mut once_io::Stream<U>) -> Result<Self, Self::Error>
     where
-        U: OStream,
+        U: std::io::Read + std::io::Seek,
     {
-        match ostream.stream_len() {
+        match stream.remainder_len() {
             Ok(stream_len) => {
                 let len = stream_len / mem::size_of::<T>() as u64;
                 let mut data: Vec<T> = vec![];
                 for _ in 0..len {
-                    data.push(T::deserialize(ostream)?);
+                    data.push(T::deserialize(stream)?);
                 }
                 Ok(data)
             }
@@ -259,13 +259,13 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<U>(ostream: &mut U) -> Result<Self, Self::Error>
+    fn deserialize<U>(stream: &mut once_io::Stream<U>) -> Result<Self, Self::Error>
     where
-        U: OStream,
+        U: std::io::Read + std::io::Seek,
     {
         let mut ret = [T::default(); N];
         for elem in ret.iter_mut() {
-            *elem = <T as Deserialize<V>>::deserialize(ostream)?;
+            *elem = <T as Deserialize<V>>::deserialize(stream)?;
         }
         Ok(ret)
     }
@@ -279,13 +279,13 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<U>(ostream: &mut U) -> Result<Self, Self::Error>
+    fn deserialize<U>(stream: &mut once_io::Stream<U>) -> Result<Self, Self::Error>
     where
-        U: OStream,
+        U: std::io::Read + std::io::Seek,
     {
-        let flag = deserialize!(bool, V, ostream, "flag");
+        let flag = deserialize!(bool, V, stream, "flag");
         if flag {
-            Ok(Some(deserialize!(T, V, ostream, "data")))
+            Ok(Some(deserialize!(T, V, stream, "data")))
         } else {
             Ok(None)
         }
@@ -303,8 +303,9 @@ mod tests {
             #[test]
             fn $test_name() {
                 let data = $value.to_le_bytes();
-                let mut reader = Cursor::new(data);
-                assert_eq!(deserialize!($type, V1, &mut reader).unwrap(), $value);
+                let mut cursor = Cursor::new(data);
+                let mut stream = once_io::Stream::new(&mut cursor);
+                assert_eq!(deserialize!($type, V1, &mut stream).unwrap(), $value);
             }
         };
     }
@@ -355,16 +356,18 @@ mod tests {
     #[test]
     fn deserialize_vector_size_fill() {
         let data = [11u8, 0, 89u8, 0];
-        let mut reader = Cursor::new(data);
-        let result = deserialize!(Vec<u16>, V1, &mut reader).unwrap();
+        let mut cursor = Cursor::new(data);
+        let mut stream = once_io::Stream::new(&mut cursor);
+        let result = deserialize!(Vec<u16>, V1, &mut stream).unwrap();
         assert_eq!(result, vec![11u16, 89u16]);
     }
 
     #[test]
     fn deserialize_vector_size_not_fill() {
         let data = [11u8, 0, 89u8, 0, 0];
-        let mut reader = Cursor::new(data);
-        let result = deserialize!(Vec<u16>, V1, &mut reader).unwrap();
+        let mut cursor = Cursor::new(data);
+        let mut stream = once_io::Stream::new(&mut cursor);
+        let result = deserialize!(Vec<u16>, V1, &mut stream).unwrap();
         assert_eq!(result, vec![11u16, 89u16]);
     }
 }

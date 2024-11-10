@@ -1,7 +1,5 @@
 use once_3dm_macros::Deserialize;
 
-use once_io::OStream;
-
 use crate::{
     chunk::{self, Chunk},
     deserialize,
@@ -95,76 +93,76 @@ impl Into<Body> for v2::Body {
 impl Deserialize<V1> for Body {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v1::Body as Deserialize<V1>>::deserialize(ostream)?.into())
+        Ok(<v1::Body as Deserialize<V1>>::deserialize(stream)?.into())
     }
 }
 
 impl Deserialize<V2> for Body {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v2::Body as Deserialize<V2>>::deserialize(ostream)?.into())
+        Ok(<v2::Body as Deserialize<V2>>::deserialize(stream)?.into())
     }
 }
 
 impl Deserialize<V3> for Body {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v3::Body as Deserialize<V3>>::deserialize(ostream)?.into())
+        Ok(<v3::Body as Deserialize<V3>>::deserialize(stream)?.into())
     }
 }
 
 impl Deserialize<V4> for Body {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v4::Body as Deserialize<V4>>::deserialize(ostream)?.into())
+        Ok(<v4::Body as Deserialize<V4>>::deserialize(stream)?.into())
     }
 }
 
 impl Deserialize<V50> for Body {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v50::Body as Deserialize<V50>>::deserialize(ostream)?.into())
+        Ok(<v50::Body as Deserialize<V50>>::deserialize(stream)?.into())
     }
 }
 
 impl Deserialize<V60> for Body {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v60::Body as Deserialize<V60>>::deserialize(ostream)?.into())
+        Ok(<v60::Body as Deserialize<V60>>::deserialize(stream)?.into())
     }
 }
 
 impl Deserialize<V70> for Body {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v70::Body as Deserialize<V70>>::deserialize(ostream)?.into())
+        Ok(<v70::Body as Deserialize<V70>>::deserialize(stream)?.into())
     }
 }

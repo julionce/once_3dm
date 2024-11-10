@@ -1,9 +1,8 @@
-use once_io::OStream;
-
 use crate::{
     deserialize::{Deserialize, FileVersion},
     error::{Error, ErrorKind, ErrorStack},
 };
+use std::io::Read;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Version {
@@ -52,12 +51,12 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
         let mut buf = [0; 8];
-        match ostream.read_exact(&mut buf) {
+        match stream.read_exact(&mut buf) {
             Ok(()) => {
                 match buf
                     .iter()
@@ -119,9 +118,10 @@ mod tests {
     #[test]
     fn deserialize_ok() {
         let data = "       1".as_bytes();
-        let mut ostream = Cursor::new(data);
+        let mut cursor = Cursor::new(data);
+        let mut stream = once_io::Stream::new(&mut cursor);
         assert_eq!(
-            deserialize!(Version, V1, &mut ostream).ok(),
+            deserialize!(Version, V1, &mut stream).ok(),
             Some(Version::V1)
         );
     }
@@ -129,14 +129,16 @@ mod tests {
     #[test]
     fn deserialize_invalid_version() {
         let data = "        a".as_bytes();
-        let mut ostream = Cursor::new(data);
-        assert!(deserialize!(Version, V1, &mut ostream).is_err());
+        let mut cursor = Cursor::new(data);
+        let mut stream = once_io::Stream::new(&mut cursor);
+        assert!(deserialize!(Version, V1, &mut stream).is_err());
     }
 
     #[test]
     fn deserialize_io_error() {
         let data = "    1".as_bytes();
-        let mut ostream = Cursor::new(data);
-        assert!(deserialize!(Version, V1, &mut ostream).is_err());
+        let mut cursor = Cursor::new(data);
+        let mut stream = once_io::Stream::new(&mut cursor);
+        assert!(deserialize!(Version, V1, &mut stream).is_err());
     }
 }

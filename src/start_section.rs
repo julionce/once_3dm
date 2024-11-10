@@ -1,6 +1,4 @@
-use std::io::SeekFrom;
-
-use once_io::OStream;
+use std::io::{Seek, SeekFrom};
 
 use crate::{
     chunk, deserialize,
@@ -17,14 +15,14 @@ pub struct StartSection {
 impl Deserialize<V1> for StartSection {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        let backup_position = SeekFrom::Start(ostream.stream_position().unwrap());
+        let backup_position = SeekFrom::Start(stream.stream_position().unwrap());
         let mut version = Version::V1;
         loop {
-            let begin = deserialize!(chunk::Begin, V1, ostream, "begin");
+            let begin = deserialize!(chunk::Begin, V1, stream, "begin");
             match begin.type_code {
                 TypeCode::Summary
                 | TypeCode::BitmapPreview
@@ -37,9 +35,7 @@ impl Deserialize<V1> for StartSection {
                 | TypeCode::Notes
                 | TypeCode::NamedCPlane
                 | TypeCode::NamedView => {
-                    ostream
-                        .seek(SeekFrom::Current(begin.length as i64))
-                        .unwrap();
+                    stream.seek(SeekFrom::Current(begin.length as i64)).unwrap();
                 }
                 _ => {
                     if TypeCode::Table as u32 == begin.type_code as u32 & 0xFFFF0000 {
@@ -50,7 +46,7 @@ impl Deserialize<V1> for StartSection {
             }
         }
         if Version::V1 == version {
-            ostream.seek(backup_position).unwrap();
+            stream.seek(backup_position).unwrap();
         }
         Ok(StartSection { version })
     }

@@ -1,7 +1,6 @@
 use std::io::{Seek, SeekFrom};
 
 use once_3dm_macros::Deserialize;
-use once_io::OStream;
 
 use crate::{
     deserialize,
@@ -18,20 +17,20 @@ pub struct Begin {
 impl Deserialize<V1> for Begin {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        let type_code = deserialize!(TypeCode, V1, ostream, "type_code");
+        let type_code = deserialize!(TypeCode, V1, stream, "type_code");
         let is_unsigned = 0 == (TypeCode::Short as u32 & type_code as u32)
             || TypeCode::Rgb == type_code
             || TypeCode::RgbDisplay == type_code
             || TypeCode::PropertiesOpenNurbsVersion == type_code
             || TypeCode::ObjectRecordType == type_code;
         let value = if is_unsigned {
-            deserialize!(u32, V1, ostream, "length") as i64
+            deserialize!(u32, V1, stream, "length") as i64
         } else {
-            deserialize!(i32, V1, ostream, "length") as i64
+            deserialize!(i32, V1, stream, "length") as i64
         };
         let is_long = (0 == type_code as u32 & TypeCode::Short as u32)
             && (0 != type_code as u32)
@@ -45,11 +44,11 @@ impl Deserialize<V1> for Begin {
 impl Deserialize<V2> for Begin {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        let type_code = deserialize!(TypeCode, V2, ostream, "type_code");
+        let type_code = deserialize!(TypeCode, V2, stream, "type_code");
         if TypeCode::PropertiesOpenNurbsVersion == type_code {
             Ok(Begin {
                 type_code,
@@ -61,9 +60,9 @@ impl Deserialize<V2> for Begin {
                 || TypeCode::RgbDisplay == type_code
                 || TypeCode::ObjectRecordType == type_code;
             let value = if is_unsigned {
-                deserialize!(u32, V2, ostream, "length") as i64
+                deserialize!(u32, V2, stream, "length") as i64
             } else {
-                deserialize!(i32, V2, ostream, "length") as i64
+                deserialize!(i32, V2, stream, "length") as i64
             };
             let is_long = (0 == type_code as u32 & TypeCode::Short as u32) && (0 < value);
             let length = if is_long { value as u64 } else { 0u64 };
@@ -75,22 +74,22 @@ impl Deserialize<V2> for Begin {
 impl Deserialize<V3> for Begin {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        deserialize!(Begin, V2, ostream)
+        deserialize!(Begin, V2, stream)
     }
 }
 
 impl Deserialize<V4> for Begin {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        deserialize!(Begin, V2, ostream)
+        deserialize!(Begin, V2, stream)
     }
 }
 
@@ -98,18 +97,18 @@ impl Deserialize<V4> for Begin {
 impl Deserialize<V50> for Begin {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        let type_code = deserialize!(TypeCode, V50, ostream, "type_code");
+        let type_code = deserialize!(TypeCode, V50, stream, "type_code");
         if TypeCode::PropertiesOpenNurbsVersion == type_code {
             Ok(Begin {
                 type_code,
                 length: 8u64,
             })
         } else {
-            let value = deserialize!(u64, V50, ostream, "value");
+            let value = deserialize!(u64, V50, stream, "value");
             let is_long = (0 == type_code as u32 & TypeCode::Short as u32) && (0 < value);
             let length = if is_long { value as u64 } else { 0u64 };
             Ok(Begin { type_code, length })
@@ -120,22 +119,22 @@ impl Deserialize<V50> for Begin {
 impl Deserialize<V60> for Begin {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        deserialize!(Begin, V50, ostream)
+        deserialize!(Begin, V50, stream)
     }
 }
 
 impl Deserialize<V70> for Begin {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        deserialize!(Begin, V50, ostream)
+        deserialize!(Begin, V50, stream)
     }
 }
 
@@ -153,55 +152,17 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<S>(ostream: &mut S) -> Result<Self, Self::Error>
+    fn deserialize<S>(stream: &mut once_io::Stream<S>) -> Result<Self, Self::Error>
     where
-        S: OStream,
+        S: std::io::Read + std::io::Seek,
     {
-        let begin = deserialize!(Begin, V, ostream, "begin");
+        let begin = deserialize!(Begin, V, stream, "begin");
         if TC == TypeCode::Null as u32 || TC == begin.type_code as u32 {
-            let chunk = &mut ostream.ochunk(Some(begin.length));
+            let chunk = &mut stream.borrow_chunk(Some(begin.length)).unwrap();
             let ret = Self {
                 inner: deserialize!(T, V, chunk, "inner"),
             };
             match chunk.seek(SeekFrom::End(0)) {
-                Ok(_) => (),
-                Err(e) => return Err(ErrorStack::new(Error::IoError(e))),
-            }
-            Ok(ret)
-        } else {
-            Err(ErrorStack::new(Error::Simple(
-                ErrorKind::InvalidChunkTypeCode,
-            )))
-        }
-    }
-}
-
-//TODO: remove when https://github.com/rust-lang/rust/issues/37748 is fixed.
-pub struct ChunkInStream<const TC: u32, T> {
-    pub inner: T,
-}
-
-impl<const TC: u32, T, V> Deserialize<V> for ChunkInStream<TC, T>
-where
-    V: FileVersion,
-    Begin: Deserialize<V>,
-    ErrorStack: From<<Begin as Deserialize<V>>::Error>,
-    T: Deserialize<V>,
-    ErrorStack: From<<T as Deserialize<V>>::Error>,
-{
-    type Error = ErrorStack;
-
-    fn deserialize<S>(ostream: &mut S) -> Result<Self, Self::Error>
-    where
-        S: OStream,
-    {
-        let begin = deserialize!(Begin, V, ostream, "begin");
-        let final_position = ostream.stream_position().unwrap() + begin.length;
-        if TC == TypeCode::Null as u32 || TC == begin.type_code as u32 {
-            let ret = Self {
-                inner: deserialize!(T, V, ostream, "inner"),
-            };
-            match ostream.seek(SeekFrom::Start(final_position)) {
                 Ok(_) => (),
                 Err(e) => return Err(ErrorStack::new(Error::IoError(e))),
             }
@@ -226,12 +187,12 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        let major = deserialize!(u32, V, ostream, "major");
-        let minor = deserialize!(u32, V, ostream, "minor");
+        let major = deserialize!(u32, V, stream, "major");
+        let minor = deserialize!(u32, V, stream, "minor");
         match (
             TryInto::<u8>::try_into(major),
             TryInto::<u8>::try_into(minor),

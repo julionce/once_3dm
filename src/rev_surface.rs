@@ -58,18 +58,18 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
         let mut surface = RevSurface::default();
-        let chunk_version = deserialize!(chunk::ShortVersion, V, ostream, "chunk_version");
+        let chunk_version = deserialize!(chunk::ShortVersion, V, stream, "chunk_version");
         match chunk_version.major() {
             1 => {
-                surface = RevSurface::V1(deserialize!(v1::RevSurface, V, ostream, "v1 surface"));
+                surface = RevSurface::V1(deserialize!(v1::RevSurface, V, stream, "v1 surface"));
             }
             2 => {
-                surface = RevSurface::V2(deserialize!(v2::RevSurface, V, ostream, "v2 surface"));
+                surface = RevSurface::V2(deserialize!(v2::RevSurface, V, stream, "v2 surface"));
             }
             _ => {}
         }

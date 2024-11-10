@@ -5,8 +5,6 @@ use crate::{
     type_code::TypeCode,
 };
 
-use once_io::OStream;
-
 pub enum CompressionMode {
     Uncompressed,
     Compressed,
@@ -26,17 +24,17 @@ where
 {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        let size = deserialize!(u32, V, ostream, "size") as u64;
+        let size = deserialize!(u32, V, stream, "size") as u64;
         //TODO: handle crc.
-        let _crc = deserialize!(u32, V, ostream, "crc");
-        let mode = deserialize!(u8, V, ostream, "mode");
+        let _crc = deserialize!(u32, V, stream, "crc");
+        let mode = deserialize!(u8, V, stream, "mode");
         match mode {
             0u8 => {
-                let mut chunk = ostream.ochunk(Some(size));
+                let mut chunk = stream.borrow_chunk(Some(size)).unwrap();
                 Ok(Self {
                     mode: CompressionMode::Uncompressed,
                     size,
@@ -44,13 +42,13 @@ where
                 })
             }
             1u8 => {
-                let begin = deserialize!(chunk::Begin, V, ostream, "begin");
+                let begin = deserialize!(chunk::Begin, V, stream, "begin");
                 match begin.type_code {
                     TypeCode::AnonymousChunk => {
                         let limit = begin.length.checked_sub(4);
                         match limit {
                             Some(v) => {
-                                let mut chunk = ostream.ochunk(Some(v));
+                                let mut chunk = stream.borrow_chunk(Some(v)).unwrap();
                                 //TODO: uncompress buffer using zlib.
                                 Ok(Self {
                                     mode: CompressionMode::Compressed,

@@ -316,9 +316,9 @@ fn generate_enum_deserialize(
         {
             type Error = ErrorStack;
 
-            fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+            fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
             where
-                T: once_io::OStream
+                T: std::io::Read + std::io::Seek
             {
                 #body
             }
@@ -404,7 +404,7 @@ fn generate_enum_variant_deserialize(ident: &syn::Ident, variant: &syn::Variant)
                     _ => panic!(),
                 };
                 quote! {
-                    deserialize!(#ty, V, ostream, #variant_ident_str)
+                    deserialize!(#ty, V, stream, #variant_ident_str)
                 }
             })
             .collect::<Vec<TokenStream2>>(),
@@ -443,9 +443,9 @@ fn generate_deserialize(
         {
             type Error = ErrorStack;
 
-            fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+            fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
             where
-                T: once_io::OStream
+                T: std::io::Read + std::io::Seek
             {
                 #body
             }
@@ -551,19 +551,19 @@ fn generate_body_core_deserialize(
             quote! {
                 let mut table = Self::default();
                 loop {
-                    let type_code = deserialize!(Rollback<TypeCode>, V, ostream, "type_code").inner;
+                    let type_code = deserialize!(Rollback<TypeCode>, V, stream, "type_code").inner;
                     match type_code {
                         #(#field_deserializes)*
                         TypeCode::EndOfFile => {
-                            deserialize!(Chunk<{TypeCode::EndOfFile as u32}, ()>, V, ostream, "end_of_file");
+                            deserialize!(Chunk<{TypeCode::EndOfFile as u32}, ()>, V, stream, "end_of_file");
                             break;
                         }
                         TypeCode::EndOfTable => {
-                            deserialize!(Chunk<{TypeCode::EndOfTable as u32}, ()>, V, ostream, "end_of_table");
+                            deserialize!(Chunk<{TypeCode::EndOfTable as u32}, ()>, V, stream, "end_of_table");
                             break;
                         }
                         _ => {
-                            deserialize!(Chunk<{TypeCode::Null as u32}, ()>, V, ostream, "unknown");
+                            deserialize!(Chunk<{TypeCode::Null as u32}, ()>, V, stream, "unknown");
                         }
                     }
                 }
@@ -581,10 +581,10 @@ fn generate_body_core_deserialize(
 fn generate_chunk_version_deserialize(with_chunk_version: &WithChunkVersion) -> TokenStream2 {
     match with_chunk_version {
         WithChunkVersion::Big => {
-            quote!(let version = deserialize!(chunk::BigVersion, V, ostream, "version");)
+            quote!(let version = deserialize!(chunk::BigVersion, V, stream, "version");)
         }
         WithChunkVersion::Short => {
-            quote!(let version = deserialize!(chunk::ShortVersion, V, ostream, "version");)
+            quote!(let version = deserialize!(chunk::ShortVersion, V, stream, "version");)
         }
         WithChunkVersion::None => quote!(),
     }
@@ -592,7 +592,7 @@ fn generate_chunk_version_deserialize(with_chunk_version: &WithChunkVersion) -> 
 
 fn generate_padding_deserialize(field_attrs: &FieldAttrs) -> TokenStream2 {
     match &field_attrs.padding.as_ref() {
-        Some(ty) => quote!(deserialize!(#ty, V, ostream, "padding");),
+        Some(ty) => quote!(deserialize!(#ty, V, stream, "padding");),
         None => quote!(),
     }
 }
@@ -629,10 +629,10 @@ fn generate_field_deserializes(
                         match &attrs.underlying_type {
                             Some(underlying_ty) => quote! {
                                 //TODO: improve deserialize! to allow #ty_str as parameter
-                                deserialize!(Chunk<{TypeCode::#type_code as u32}, #underlying_ty>, V, ostream, #ident_str).inner.into()
+                                deserialize!(Chunk<{TypeCode::#type_code as u32}, #underlying_ty>, V, stream, #ident_str).inner.into()
                             },
                             None => quote! {
-                                deserialize!(Chunk<{TypeCode::#type_code as u32}, #ty>, V, ostream, #ident_str).inner
+                                deserialize!(Chunk<{TypeCode::#type_code as u32}, #ty>, V, stream, #ident_str).inner
                             },
                         }
                     }
@@ -640,10 +640,10 @@ fn generate_field_deserializes(
                         match &attrs.underlying_type {
                             Some(underlying_ty) => quote! {
                                 //TODO: improve deserialize! to allow #ty_str as parameter
-                                deserialize!(#underlying_ty, V, ostream, #ident_str).into()
+                                deserialize!(#underlying_ty, V, stream, #ident_str).into()
                             },
                             None => quote! {
-                                deserialize!(#ty, V, ostream, #ident_str)
+                                deserialize!(#ty, V, stream, #ident_str)
                             },
                         }
                     }

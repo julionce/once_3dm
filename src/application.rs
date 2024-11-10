@@ -67,65 +67,65 @@ impl From<v2::Application> for Application {
 impl Deserialize<V2> for Application {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v2::Application as Deserialize<V2>>::deserialize(ostream)?.into())
+        Ok(<v2::Application as Deserialize<V2>>::deserialize(stream)?.into())
     }
 }
 
 impl Deserialize<V3> for Application {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v3::Application as Deserialize<V3>>::deserialize(ostream)?.into())
+        Ok(<v3::Application as Deserialize<V3>>::deserialize(stream)?.into())
     }
 }
 
 impl Deserialize<V4> for Application {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v4::Application as Deserialize<V4>>::deserialize(ostream)?.into())
+        Ok(<v4::Application as Deserialize<V4>>::deserialize(stream)?.into())
     }
 }
 
 impl Deserialize<V50> for Application {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v50::Application as Deserialize<V50>>::deserialize(ostream)?.into())
+        Ok(<v50::Application as Deserialize<V50>>::deserialize(stream)?.into())
     }
 }
 
 impl Deserialize<V60> for Application {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v60::Application as Deserialize<V60>>::deserialize(ostream)?.into())
+        Ok(<v60::Application as Deserialize<V60>>::deserialize(stream)?.into())
     }
 }
 
 impl Deserialize<V70> for Application {
     type Error = ErrorStack;
 
-    fn deserialize<T>(ostream: &mut T) -> Result<Self, Self::Error>
+    fn deserialize<T>(stream: &mut once_io::Stream<T>) -> Result<Self, Self::Error>
     where
-        T: once_io::OStream,
+        T: std::io::Read + std::io::Seek,
     {
-        Ok(<v70::Application as Deserialize<V70>>::deserialize(ostream)?.into())
+        Ok(<v70::Application as Deserialize<V70>>::deserialize(stream)?.into())
     }
 }
